@@ -5,22 +5,21 @@ mod built;
 
 use std::ops::Deref;
 
-use pyo3::prelude::*;
-use pyo3::PyNativeType;
-use pyo3::exceptions::KeyError;
 use pyo3::class::basic::CompareOp;
 use pyo3::class::PyGCProtocol;
 use pyo3::class::PyIterProtocol;
 use pyo3::class::PyObjectProtocol;
 use pyo3::class::PySequenceProtocol;
-use pyo3::gc::PyVisit;
+use pyo3::exceptions::KeyError;
 use pyo3::gc::PyTraverseError;
+use pyo3::gc::PyVisit;
+use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use pyo3::types::PyIterator;
 use pyo3::types::PySet;
-use pyo3::types::PyTuple;
 use pyo3::types::PyString;
-
+use pyo3::types::PyTuple;
+use pyo3::PyNativeType;
 
 // --- Common implementation -------------------------------------------------
 
@@ -32,9 +31,7 @@ macro_rules! common_impl {
             }
 
             pub fn from_object(obj: PyObject) -> Self {
-                Self {
-                    inner: Some(obj)
-                }
+                Self { inner: Some(obj) }
             }
         }
 
@@ -130,7 +127,9 @@ macro_rules! common_impl {
                 let gil = Python::acquire_gil();
                 let py = gil.python();
                 match slf.deref().inner {
-                    None => PyTuple::empty(py).to_object(py).call_method0(py, "__iter__"),
+                    None => PyTuple::empty(py)
+                        .to_object(py)
+                        .call_method0(py, "__iter__"),
                     Some(ref inner) => inner.call_method0(py, "__iter__"),
                 }
             }
@@ -181,25 +180,23 @@ macro_rules! common_impl {
                         (None, None) => match op {
                             Eq | Le | Ge => Ok(true.to_object(py)),
                             Ne | Lt | Gt => Ok(false.to_object(py)),
-                        }
+                        },
                         (None, Some(_)) => match op {
-                            Eq | Gt | Ge  => Ok(false.to_object(py)),
+                            Eq | Gt | Ge => Ok(false.to_object(py)),
                             Ne | Lt | Le => Ok(true.to_object(py)),
-                        }
+                        },
                         (Some(_), None) => match op {
-                            Eq | Lt | Le  => Ok(false.to_object(py)),
+                            Eq | Lt | Le => Ok(false.to_object(py)),
                             Ne | Gt | Ge => Ok(true.to_object(py)),
-                        }
-                        (Some(l), Some(r)) => {
-                            match op {
-                                Eq => l.call_method1(py, "__eq__", (r,)),
-                                Ne => l.call_method1(py, "__ne__", (r,)),
-                                Lt => l.call_method1(py, "__lt__", (r,)),
-                                Le => l.call_method1(py, "__le__", (r,)),
-                                Gt => l.call_method1(py, "__gt__", (r,)),
-                                Ge => l.call_method1(py, "__ge__", (r,)),
-                            }
-                        }
+                        },
+                        (Some(l), Some(r)) => match op {
+                            Eq => l.call_method1(py, "__eq__", (r,)),
+                            Ne => l.call_method1(py, "__ne__", (r,)),
+                            Lt => l.call_method1(py, "__lt__", (r,)),
+                            Le => l.call_method1(py, "__le__", (r,)),
+                            Gt => l.call_method1(py, "__gt__", (r,)),
+                            Ge => l.call_method1(py, "__ge__", (r,)),
+                        },
                     }
                 } else {
                     match op {
@@ -210,7 +207,7 @@ macro_rules! common_impl {
                 }
             }
         }
-    }
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -247,7 +244,7 @@ impl PyGCProtocol for NanoSet {
 #[derive(Debug, Default)]
 /// A set that has lower memory footprint if it is empty.
 struct PicoSet {
-    inner: Option<PyObject>
+    inner: Option<PyObject>,
 }
 
 common_impl!(PicoSet);
