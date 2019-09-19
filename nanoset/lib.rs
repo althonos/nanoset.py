@@ -8,6 +8,7 @@ use std::ops::Deref;
 use pyo3::class::basic::CompareOp;
 use pyo3::class::PyGCProtocol;
 use pyo3::class::PyIterProtocol;
+use pyo3::class::PyNumberProtocol;
 use pyo3::class::PyObjectProtocol;
 use pyo3::class::PySequenceProtocol;
 use pyo3::exceptions::KeyError;
@@ -105,6 +106,28 @@ macro_rules! common_impl {
                 }
             }
 
+            fn difference(&self, other: &PyAny) -> PyResult<Self> {
+                match self.inner {
+                    None => Ok(Self::new()),
+                    Some(ref obj) => {
+                        let gil = Python::acquire_gil();
+                        obj.call_method1(gil.python(), "difference", (other,))
+                            .map(Self::from_object)
+                    }
+                }
+            }
+
+            fn intersection(&self, other: &PyAny) -> PyResult<Self> {
+                match self.inner {
+                    None => Ok(Self::new()),
+                    Some(ref obj) => {
+                        let gil = Python::acquire_gil();
+                        obj.call_method1(gil.python(), "intersection", (other,))
+                            .map(Self::from_object)
+                    }
+                }
+            }
+
             fn pop(&mut self) -> PyResult<PyObject> {
                 if let Some(ref inner) = self.inner {
                     let gil = Python::acquire_gil();
@@ -136,13 +159,15 @@ macro_rules! common_impl {
         }
 
         #[pyproto]
-        impl PySequenceProtocol for $cls {
-            fn __len__(&self) -> PyResult<usize> {
-                match self.inner {
-                    None => Ok(0usize),
-                    Some(ref inner) => {
+        impl PyNumberProtocol for $cls {
+            fn __and__(lhs: &mut Self, rhs: &PyAny) -> PyResult<Self> {
+                // TODO: mandatory type check of right hand expression
+                match lhs.inner {
+                    None => Ok(Self::new()),
+                    Some(ref set) => {
                         let gil = Python::acquire_gil();
-                        Ok(inner.cast_as::<PySet>(gil.python())?.len())
+                        set.call_method1(gil.python(), "__and__", (rhs,))
+                            .map(Self::from_object)
                     }
                 }
             }
@@ -207,6 +232,31 @@ macro_rules! common_impl {
                 }
             }
         }
+
+        #[pyproto]
+        impl PySequenceProtocol for $cls {
+            fn __len__(&self) -> PyResult<usize> {
+                match self.inner {
+                    None => Ok(0usize),
+                    Some(ref inner) => {
+                        let gil = Python::acquire_gil();
+                        Ok(inner.cast_as::<PySet>(gil.python())?.len())
+                    }
+                }
+            }
+
+            fn __contains__(&self, item: &PyAny) -> PyResult<bool> {
+                match self.inner {
+                    None => Ok(false),
+                    Some(ref obj) => {
+                        let gil = Python::acquire_gil();
+                        let set = obj.cast_as::<PySet>(gil.python())?;
+                        set.contains(item)
+                    }
+                }
+            }
+        }
+
     };
 }
 
