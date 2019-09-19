@@ -8,6 +8,7 @@ use std::ops::Deref;
 use pyo3::prelude::*;
 use pyo3::PyNativeType;
 use pyo3::exceptions::KeyError;
+use pyo3::class::basic::CompareOp;
 use pyo3::class::PyGCProtocol;
 use pyo3::class::PyIterProtocol;
 use pyo3::class::PyObjectProtocol;
@@ -167,6 +168,46 @@ macro_rules! common_impl {
 
             fn __bool__(&self) -> PyResult<bool> {
                 Ok(self.inner.is_some())
+            }
+
+            fn __richcmp__(&self, obj: &PyAny, op: CompareOp) -> PyResult<PyObject> {
+                use self::CompareOp::*;
+
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+
+                if let Ok(other) = obj.cast_as::<Self>() {
+                    match (&self.inner, &other.inner) {
+                        (None, None) => match op {
+                            Eq | Le | Ge => Ok(true.to_object(py)),
+                            Ne | Lt | Gt => Ok(false.to_object(py)),
+                        }
+                        (None, Some(_)) => match op {
+                            Eq | Gt | Ge  => Ok(false.to_object(py)),
+                            Ne | Lt | Le => Ok(true.to_object(py)),
+                        }
+                        (Some(_), None) => match op {
+                            Eq | Lt | Le  => Ok(false.to_object(py)),
+                            Ne | Gt | Ge => Ok(true.to_object(py)),
+                        }
+                        (Some(l), Some(r)) => {
+                            match op {
+                                Eq => l.call_method1(py, "__eq__", (r,)),
+                                Ne => l.call_method1(py, "__ne__", (r,)),
+                                Lt => l.call_method1(py, "__lt__", (r,)),
+                                Le => l.call_method1(py, "__le__", (r,)),
+                                Gt => l.call_method1(py, "__gt__", (r,)),
+                                Ge => l.call_method1(py, "__ge__", (r,)),
+                            }
+                        }
+                    }
+                } else {
+                    match op {
+                        CompareOp::Eq => Ok(false.to_object(py)),
+                        CompareOp::Ne => Ok(true.to_object(py)),
+                        _ => Ok(py.NotImplemented()),
+                    }
+                }
             }
         }
     }
