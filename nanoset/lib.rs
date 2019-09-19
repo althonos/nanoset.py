@@ -1,4 +1,7 @@
 extern crate pyo3;
+extern crate pyo3_built;
+
+mod built;
 
 use std::ops::Deref;
 
@@ -46,21 +49,30 @@ macro_rules! common_impl {
         impl $cls {
             #[new]
             fn __new__(obj: &PyRawObject, iterable: Option<&PyAny>) -> PyResult<()> {
-                match iterable {
-                    None => obj.init(Self::new()),
-                    Some(it) => {
-                        let py = obj.py();
-                        let iterator = PyIterator::from_object(py, it)?;
-                        let items: PyResult<Vec<&PyAny>> = iterator.collect();
-                        let res = items?;
-                        if res.is_empty() {
-                            obj.init(Self::new());
-                        } else {
-                            let set = PySet::new(py, res.as_slice())?;
-                            obj.init(Self::from_object(set.to_object(py)));
-                        }
+                let mut val = Self::new();
+                val.__init__(iterable)?;
+                obj.init(val);
+                Ok(())
+            }
+
+            fn __init__(&mut self, iterable: Option<&PyAny>) -> PyResult<()> {
+                if let Some(it) = iterable {
+                    let gil = Python::acquire_gil();
+                    let py = gil.python();
+
+                    let iterator = PyIterator::from_object(py, it)?;
+                    let items: PyResult<Vec<&PyAny>> = iterator.collect();
+                    let res = items?;
+
+                    if res.is_empty() {
+                        self.inner = None
+                    } else {
+                        let set = PySet::new(py, res.as_slice())?;
+                        self.inner = Some(set.to_object(py));
                     }
-                };
+                } else {
+                    self.inner = None;
+                }
 
                 Ok(())
             }
@@ -202,8 +214,9 @@ common_impl!(PicoSet);
 // ---------------------------------------------------------------------------
 
 #[pymodule]
-fn nanoset(_py: Python, m: &PyModule) -> PyResult<()> {
+fn nanoset(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<NanoSet>()?;
     m.add_class::<PicoSet>()?;
+    m.add("__build__", pyo3_built::pyo3_built!(py, built))?;
     Ok(())
 }
