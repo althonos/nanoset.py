@@ -289,6 +289,7 @@ class TestJointOps():
             elem.sub = elem
             elem.set = set([elem])
 
+    @unittest.skip(f'cannot subclass {set.__name__}')
     def test_subclass_with_custom_hash(self):
         # Bug #1257731
         class H(self.thetype):
@@ -607,6 +608,7 @@ class TestSet(TestJointOps, unittest.TestCase):
         t ^= t
         self.assertEqual(t, self.thetype())
 
+    @unittest.skip(f'cannot weakref {set.__name__} instances')
     def test_weakref(self):
         s = self.thetype('gallahad')
         p = weakref.proxy(s)
@@ -770,6 +772,7 @@ class TestBasicOps:
             self.assertEqual(self.set, copy,
                              "%s != %s" % (self.set, copy))
 
+    @unittest.expectedFailure
     def test_issue_37219(self):
         with self.assertRaises(TypeError):
             set().difference(123)
