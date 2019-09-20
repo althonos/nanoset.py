@@ -16,11 +16,11 @@ use pyo3::gc::PyTraverseError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
+use pyo3::types::PyFrozenSet;
 use pyo3::types::PyIterator;
 use pyo3::types::PySet;
 use pyo3::types::PyString;
 use pyo3::types::PyTuple;
-use pyo3::types::PyFrozenSet;
 use pyo3::PyNativeType;
 
 // --- Common implementation -------------------------------------------------
@@ -121,11 +121,8 @@ macro_rules! common_impl {
 
                 match self.inner {
                     None => Ok((ty, PyTuple::empty(py)).to_object(py)),
-                    Some(ref set) => Ok(
-                        (ty, (set.call_method0(py, "copy")?,)).to_object(py)
-                    )
+                    Some(ref set) => Ok((ty, (set.call_method0(py, "copy")?,)).to_object(py)),
                 }
-
             }
 
             fn add(&mut self, item: &PyAny) -> PyResult<()> {
@@ -158,19 +155,22 @@ macro_rules! common_impl {
                 }
             }
 
-            fn difference(&self, other: &PyAny) -> PyResult<Self> {
-                match self.inner {
-                    None => Ok(Self::new()),
-                    Some(ref obj) => {
-                        let gil = Python::acquire_gil();
-                        let py = gil.python();
-                        obj.call_method1(py, "difference", (other,))
-                            .and_then(|obj| Self::try_from_obj(py, obj))
-                    }
+            #[args(others = "*")]
+            fn difference(&self, others: &PyTuple) -> PyResult<Self> {
+                let py = others.py();
+                if let Some(ref obj) = self.inner {
+                    // substracting from non-empty set may give an
+                    // empty set --> we must use `try_from_obj`.
+                    obj.call_method1(py, "difference", others)
+                        .and_then(|s| Self::try_from_obj(py, s))
+                } else {
+                    // substracting from an empty set always gives
+                    // an empty set --> we can use `new`.
+                    Ok(Self::new())
                 }
             }
 
-            #[args(others="*")]
+            #[args(others = "*")]
             fn difference_update(&self, others: &PyTuple) -> PyResult<()> {
                 if let Some(ref inner) = self.inner {
                     let gil = Python::acquire_gil();
@@ -189,19 +189,22 @@ macro_rules! common_impl {
                 Ok(())
             }
 
-            fn intersection(&self, other: &PyAny) -> PyResult<Self> {
-                match self.inner {
-                    None => Ok(Self::new()),
-                    Some(ref obj) => {
-                        let gil = Python::acquire_gil();
-                        let py = gil.python();
-                        obj.call_method1(py, "intersection", (other,))
-                            .and_then(|obj| Self::try_from_obj(py, obj))
-                    }
+            #[args(others = "*")]
+            fn intersection(&self, others: &PyTuple) -> PyResult<Self> {
+                let py = others.py();
+                if let Some(ref obj) = self.inner {
+                    // intersecting an non-empty set may give an
+                    // empty set --> we must use `try_from_obj`.
+                    obj.call_method1(py, "intersection", others)
+                        .and_then(|s| Self::try_from_obj(py, s))
+                } else {
+                    // intersecting an empty set always gives
+                    // an empty set --> we can use `new`.
+                    Ok(Self::new())
                 }
             }
 
-            #[args(others="*")]
+            #[args(others = "*")]
             fn intersection_update(&self, others: &PyTuple) -> PyResult<()> {
                 if let Some(ref inner) = self.inner {
                     let gil = Python::acquire_gil();
@@ -264,33 +267,52 @@ macro_rules! common_impl {
                 KeyError::into("pop from an empty set")
             }
 
-            fn remove(&mut self, elem: &PyAny) -> PyResult<()> {
+            fn remove(&mut self, item: &PyAny) -> PyResult<()> {
                 let gil = Python::acquire_gil();
                 let py = gil.python();
                 if let Some(ref inner) = self.inner {
-                    inner.call_method1(py, "remove", (elem,))?;
+                    // `set2.remove(set1)` actually does for
+                    // `set2.remove(frozenset(set1))`, so we have to check if
+                    // `set1` is `NanoSet` to reproduce that behaviour.
+                    if let Ok(ref other) = item.cast_as::<$cls>() {
+                        let res = if let Some(ref obj) = other.inner {
+                            inner.call_method1(py, "remove", (obj.clone_ref(py),))
+                        } else {
+                            inner.call_method1(py, "remove", (PyFrozenSet::empty(py)?,))
+                        };
+                    } else {
+                        inner.call_method1(py, "remove", (item,))?;
+                    }
+
+                    // after removing the item we check if the set is empty
+                    // to maintain the invariant
                     if inner.cast_as::<PySet>(py).unwrap().is_empty() {
                         self.inner = None
                     }
+
                     Ok(())
                 } else {
-                    KeyError::into(elem.to_object(py))
+                    KeyError::into(item.to_object(py))
                 }
             }
 
             fn symmetric_difference(&self, other: &PyAny) -> PyResult<Self> {
                 let gil = Python::acquire_gil();
                 let py = gil.python();
-                match self.inner {
-                    None => Self::try_from_any(py, other),
-                    Some(ref obj) => {
-                        obj.call_method1(py, "symmetric_difference", (other,))
-                            .and_then(|obj| Self::try_from_obj(py, obj))
-                    }
+                if let Some(ref obj) = self.inner {
+                    // substracting from non-empty set may give an
+                    // empty set --> we must use `try_from_obj`.
+                    obj.call_method1(py, "symmetric_difference", (other,))
+                        .and_then(|obj| Self::try_from_obj(py, obj))
+                } else {
+                    // all items of `other` are not in the set
+                    // since it is empty, but `other` may be empty
+                    // as well --> we must use `try_from_obj`.
+                    Self::try_from_any(py, other)
                 }
             }
 
-            #[args(others="*")]
+            #[args(others = "*")]
             fn symmetric_difference_update(&self, others: &PyTuple) -> PyResult<()> {
                 if let Some(ref inner) = self.inner {
                     let gil = Python::acquire_gil();
@@ -301,20 +323,23 @@ macro_rules! common_impl {
                 Ok(())
             }
 
-            #[args(others="*")]
+            #[args(others = "*")]
             fn union(&self, others: &PyTuple) -> PyResult<Self> {
                 let py = others.py();
                 if let Some(ref inner) = self.inner {
-                    inner.call_method1(py, "union", others)
-                        .and_then(|set| Self::try_from_obj(py, set))
+                    // The set was not empty before, so it will not
+                    // be after the union --> we can use `from_set`.
+                    inner.call_method1(py, "union", others).map(Self::from_set)
                 } else {
+                    // The set was empty before, but it may still be
+                    // after the union --> we must use `try_from_obj`.
                     let mut s = PySet::empty(py)?.to_object(py);
                     s.call_method1(py, "union", others)
                         .and_then(|set| Self::try_from_obj(py, set))
                 }
             }
 
-            #[args(others="*")]
+            #[args(others = "*")]
             fn update(&mut self, others: &PyTuple) -> PyResult<()> {
                 for other in others.iter() {
                     match self.inner {
@@ -348,11 +373,15 @@ macro_rules! common_impl {
         #[pyproto]
         impl PyNumberProtocol for $cls {
             fn __and__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
-                lhs.intersection(rhs)
+                let gil = Python::acquire_gil();
+                let args: Py<PyTuple> = (rhs,).into_py(gil.python());
+                lhs.intersection(&args.as_ref(gil.python()))
             }
 
             fn __sub__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
-                lhs.difference(rhs)
+                let gil = Python::acquire_gil();
+                let args: Py<PyTuple> = (rhs,).into_py(gil.python());
+                lhs.difference(&args.as_ref(gil.python()))
             }
 
             fn __or__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
@@ -361,8 +390,19 @@ macro_rules! common_impl {
                 lhs.union(&args.as_ref(gil.python()))
             }
 
-            fn __xor__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
-                lhs.symmetric_difference(rhs)
+            fn __xor__(lhs: &Self, rhs: &PyAny) -> PyResult<PyObject> {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+                if rhs.cast_as::<PySet>().is_ok()
+                    || rhs.cast_as::<PyFrozenSet>().is_ok()
+                    || rhs.cast_as::<$cls>().is_ok()
+                {
+                    lhs.symmetric_difference(rhs)
+                        .and_then(|s| Py::new(py, s))
+                        .map(PyObject::from)
+                } else {
+                    Ok(py.NotImplemented())
+                }
             }
         }
 
@@ -447,21 +487,25 @@ macro_rules! common_impl {
             }
 
             fn __contains__(&self, item: &PyAny) -> PyResult<bool> {
-                match self.inner {
-                    None => Ok(false),
-                    Some(ref obj) => {
-                        let gil = Python::acquire_gil();
-                        let py = gil.python();
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+                if let Some(ref obj) = self.inner {
+                    // `set1 in set2` actually checks for
+                    // `frozenset(set1) in set2`, so we have to check if
+                    // `set1` is `NanoSet` to reproduce that behaviour.
+                    if let Ok(ref other) = item.cast_as::<$cls>() {
                         let set = obj.cast_as::<PySet>(py).unwrap();
-                        if let Ok(ref other) = item.cast_as::<$cls>() {
-                            match other.inner {
-                                Some(ref obj) => set.contains(obj),
-                                None => set.contains(PyFrozenSet::empty(py)?),
-                            }
-                        } else {
-                            set.contains(item)
+                        match other.inner {
+                            Some(ref obj) => set.contains(obj),
+                            None => set.contains(PyFrozenSet::empty(py)?),
                         }
+                    } else {
+                        obj.call_method1(py, "__contains__", (item,))
+                            .and_then(|val| val.extract(py))
                     }
+                } else {
+                    // an empty set never contains anything.
+                    Ok(false)
                 }
             }
         }
@@ -470,7 +514,7 @@ macro_rules! common_impl {
 
 // ---------------------------------------------------------------------------
 
-#[pyclass(gc, module="nanoset")]
+#[pyclass(gc, module = "nanoset")]
 #[derive(Debug, Default)]
 /// A set that has lower memory footprint if it is empty.
 struct NanoSet {
@@ -498,7 +542,7 @@ impl PyGCProtocol for NanoSet {
 
 // ---------------------------------------------------------------------------
 
-#[pyclass(module="nanoset")]
+#[pyclass(module = "nanoset")]
 #[derive(Debug, Default)]
 /// A set that has lower memory footprint if it is empty.
 struct PicoSet {
