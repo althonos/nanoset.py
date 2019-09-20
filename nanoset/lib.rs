@@ -372,37 +372,71 @@ macro_rules! common_impl {
 
         #[pyproto]
         impl PyNumberProtocol for $cls {
-            fn __and__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
+            fn __and__(lhs: &Self, rhs: &PyAny) -> PyResult<PyObject> {
                 let gil = Python::acquire_gil();
+                let py = gil.python();
+
+                if rhs.cast_as::<PySet>().is_err()
+                    && rhs.cast_as::<PyFrozenSet>().is_err()
+                    && rhs.cast_as::<$cls>().is_err()
+                {
+                    return Ok(py.NotImplemented());
+                }
+
                 let args: Py<PyTuple> = (rhs,).into_py(gil.python());
-                lhs.intersection(&args.as_ref(gil.python()))
+                lhs.intersection(&args.as_ref(py))
+                    .and_then(|s| Py::new(py, s))
+                    .map(PyObject::from)
             }
 
-            fn __sub__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
+            fn __sub__(lhs: &Self, rhs: &PyAny) -> PyResult<PyObject> {
                 let gil = Python::acquire_gil();
+                let py = gil.python();
+
+                if rhs.cast_as::<PySet>().is_err()
+                    && rhs.cast_as::<PyFrozenSet>().is_err()
+                    && rhs.cast_as::<$cls>().is_err()
+                {
+                    return Ok(py.NotImplemented());
+                }
+
                 let args: Py<PyTuple> = (rhs,).into_py(gil.python());
-                lhs.difference(&args.as_ref(gil.python()))
+                lhs.difference(&args.as_ref(py))
+                    .and_then(|s| Py::new(py, s))
+                    .map(PyObject::from)
             }
 
-            fn __or__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
+            fn __or__(lhs: &Self, rhs: &PyAny) -> PyResult<PyObject> {
                 let gil = Python::acquire_gil();
+                let py = gil.python();
+
+                if rhs.cast_as::<PySet>().is_err()
+                    && rhs.cast_as::<PyFrozenSet>().is_err()
+                    && rhs.cast_as::<$cls>().is_err()
+                {
+                    return Ok(py.NotImplemented());
+                }
+
                 let args: Py<PyTuple> = (rhs,).into_py(gil.python());
-                lhs.union(&args.as_ref(gil.python()))
+                lhs.union(&args.as_ref(py))
+                    .and_then(|s| Py::new(py, s))
+                    .map(PyObject::from)
             }
 
             fn __xor__(lhs: &Self, rhs: &PyAny) -> PyResult<PyObject> {
                 let gil = Python::acquire_gil();
                 let py = gil.python();
-                if rhs.cast_as::<PySet>().is_ok()
-                    || rhs.cast_as::<PyFrozenSet>().is_ok()
-                    || rhs.cast_as::<$cls>().is_ok()
+
+                if rhs.cast_as::<PySet>().is_err()
+                    && rhs.cast_as::<PyFrozenSet>().is_err()
+                    && rhs.cast_as::<$cls>().is_err()
                 {
-                    lhs.symmetric_difference(rhs)
-                        .and_then(|s| Py::new(py, s))
-                        .map(PyObject::from)
-                } else {
-                    Ok(py.NotImplemented())
+                    return Ok(py.NotImplemented());
                 }
+
+                lhs.symmetric_difference(rhs)
+                    .and_then(|s| Py::new(py, s))
+                    .map(PyObject::from)
             }
         }
 
