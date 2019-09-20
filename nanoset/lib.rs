@@ -20,6 +20,7 @@ use pyo3::types::PyIterator;
 use pyo3::types::PySet;
 use pyo3::types::PyString;
 use pyo3::types::PyTuple;
+use pyo3::types::PyFrozenSet;
 use pyo3::PyNativeType;
 
 // --- Common implementation -------------------------------------------------
@@ -119,13 +120,9 @@ macro_rules! common_impl {
                 let ty = <$cls as pyo3::type_object::PyTypeObject>::type_object();
 
                 match self.inner {
-                    None => Ok(ty.to_object(py)),
+                    None => Ok((ty, PyTuple::empty(py)).to_object(py)),
                     Some(ref set) => Ok(
-                        (
-                            ty.to_object(py),
-                            (set.call_method0(py, "copy")?,)
-                        )
-                            .to_object(py)
+                        (ty, (set.call_method0(py, "copy")?,)).to_object(py)
                     )
                 }
 
@@ -173,6 +170,25 @@ macro_rules! common_impl {
                 }
             }
 
+            #[args(others="*")]
+            fn difference_update(&self, others: &PyTuple) -> PyResult<()> {
+                if let Some(ref inner) = self.inner {
+                    let gil = Python::acquire_gil();
+                    let py = gil.python();
+                    inner.call_method1(py, "difference_update", others)?;
+                }
+
+                Ok(())
+            }
+
+            fn discard(&mut self, elem: &PyAny) -> PyResult<()> {
+                if let Some(ref set) = self.inner {
+                    let gil = Python::acquire_gil();
+                    set.call_method1(gil.python(), "discard", (elem,))?;
+                }
+                Ok(())
+            }
+
             fn intersection(&self, other: &PyAny) -> PyResult<Self> {
                 match self.inner {
                     None => Ok(Self::new()),
@@ -185,12 +201,51 @@ macro_rules! common_impl {
                 }
             }
 
+            #[args(others="*")]
+            fn intersection_update(&self, others: &PyTuple) -> PyResult<()> {
+                if let Some(ref inner) = self.inner {
+                    let gil = Python::acquire_gil();
+                    let py = gil.python();
+                    inner.call_method1(py, "intersection_update", others)?;
+                }
+
+                Ok(())
+            }
+
             fn isdisjoint(&self, other: &PyAny) -> PyResult<PyObject> {
                 let gil = Python::acquire_gil();
                 let py = gil.python();
                 match self.inner {
                     None => Ok(true.to_object(py)),
                     Some(ref obj) => obj.call_method1(py, "isdisjoint", (other,)),
+                }
+            }
+
+            fn issubset(&self, other: &PyAny) -> PyResult<PyObject> {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+                match self.inner {
+                    None => Ok(true.to_object(py)),
+                    Some(ref obj) => obj.call_method1(py, "issubset", (other,)),
+                }
+            }
+
+            fn issuperset(&self, other: &PyAny) -> PyResult<bool> {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+
+                let mut it = PyIterator::from_object(py, other)?;
+                match self.inner {
+                    None => Ok(it.next().is_none()),
+                    Some(ref inner) => {
+                        let set = inner.cast_as::<PySet>(py).unwrap();
+                        for item in it {
+                            if !set.contains(item?)? {
+                                return Ok(false);
+                            }
+                        }
+                        Ok(true)
+                    }
                 }
             }
 
@@ -209,6 +264,20 @@ macro_rules! common_impl {
                 KeyError::into("pop from an empty set")
             }
 
+            fn remove(&mut self, elem: &PyAny) -> PyResult<()> {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+                if let Some(ref inner) = self.inner {
+                    inner.call_method1(py, "remove", (elem,))?;
+                    if inner.cast_as::<PySet>(py).unwrap().is_empty() {
+                        self.inner = None
+                    }
+                    Ok(())
+                } else {
+                    KeyError::into(elem.to_object(py))
+                }
+            }
+
             fn symmetric_difference(&self, other: &PyAny) -> PyResult<Self> {
                 let gil = Python::acquire_gil();
                 let py = gil.python();
@@ -221,16 +290,44 @@ macro_rules! common_impl {
                 }
             }
 
-            fn union(&self, other: &PyAny) -> PyResult<Self> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
-                match self.inner {
-                    None => Self::try_from_any(py, other),
-                    Some(ref obj) => {
-                        obj.call_method1(py, "union", (other,))
-                            .map(Self::from_set)
+            #[args(others="*")]
+            fn symmetric_difference_update(&self, others: &PyTuple) -> PyResult<()> {
+                if let Some(ref inner) = self.inner {
+                    let gil = Python::acquire_gil();
+                    let py = gil.python();
+                    inner.call_method1(py, "symmetric_difference_update", others)?;
+                }
+
+                Ok(())
+            }
+
+            #[args(others="*")]
+            fn union(&self, others: &PyTuple) -> PyResult<Self> {
+                let py = others.py();
+                if let Some(ref inner) = self.inner {
+                    inner.call_method1(py, "union", others)
+                        .and_then(|set| Self::try_from_obj(py, set))
+                } else {
+                    let mut s = PySet::empty(py)?.to_object(py);
+                    s.call_method1(py, "update", others)
+                        .and_then(|set| Self::try_from_obj(py, set))
+                }
+            }
+
+            #[args(others="*")]
+            fn update(&mut self, others: &PyTuple) -> PyResult<()> {
+                for other in others.iter() {
+                    match self.inner {
+                        None => {
+                            *self = Self::try_from_any(others.py(), other)?;
+                        }
+                        Some(ref inner) => {
+                            inner.call_method1(others.py(), "update", (other,))?;
+                        }
                     }
                 }
+
+                Ok(())
             }
         }
 
@@ -259,7 +356,9 @@ macro_rules! common_impl {
             }
 
             fn __or__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
-                lhs.union(rhs)
+                let gil = Python::acquire_gil();
+                let args: Py<PyTuple> = (rhs,).into_py(gil.python());
+                lhs.union(&args.as_ref(gil.python()))
             }
 
             fn __xor__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
@@ -274,12 +373,14 @@ macro_rules! common_impl {
                 let py = gil.python();
                 match self.inner {
                     None => {
-                        let s = concat!(stringify!($cls), "()");
-                        Ok(s.to_object(py))
+                        // let s = concat!(stringify!($cls), "()");
+                        // Ok(s.to_object(py))
+                        Ok("set()".to_object(py))
                     }
                     Some(ref inner) => {
-                        let s = PyString::new(py, concat!(stringify!($cls), "({})"));
-                        s.to_object(py).call_method1(py, "format", (inner,))
+                        // let s = PyString::new(py, concat!(stringify!($cls), "({})"));
+                        // s.to_object(py).call_method1(py, "format", (inner,))
+                        inner.call_method0(py, "__repr__")
                     }
                 }
             }
@@ -317,6 +418,12 @@ macro_rules! common_impl {
                             Ge => l.call_method1(py, "__ge__", (r,)),
                         },
                     }
+                } else if let Ok(other) = obj.cast_as::<PySet>() {
+                    // unimplemented!(concat!(stringify!($cls), ".__cmp__(set)"));
+                    Ok(py.NotImplemented())
+                } else if let Ok(other) = obj.cast_as::<PyFrozenSet>() {
+                    // unimplemented!(concat!(stringify!($cls), ".__cmp__(frozenset)"));
+                    Ok(py.NotImplemented())
                 } else {
                     match op {
                         CompareOp::Eq => Ok(false.to_object(py)),
@@ -344,8 +451,16 @@ macro_rules! common_impl {
                     None => Ok(false),
                     Some(ref obj) => {
                         let gil = Python::acquire_gil();
-                        let set = obj.cast_as::<PySet>(gil.python())?;
-                        set.contains(item)
+                        let py = gil.python();
+                        let set = obj.cast_as::<PySet>(py).unwrap();
+                        if let Ok(ref other) = item.cast_as::<$cls>() {
+                            match other.inner {
+                                Some(ref obj) => set.contains(obj),
+                                None => set.contains(PyFrozenSet::empty(py)?),
+                            }
+                        } else {
+                            set.contains(item)
+                        }
                     }
                 }
             }
