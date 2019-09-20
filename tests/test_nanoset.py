@@ -787,7 +787,6 @@ class TestBasicOps:
             self.assertEqual(self.set, copy,
                              "%s != %s" % (self.set, copy))
 
-    @unittest.expectedFailure
     def test_issue_37219(self):
         with self.assertRaises(TypeError):
             set().difference(123)

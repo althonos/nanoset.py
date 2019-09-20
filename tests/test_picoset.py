@@ -400,7 +400,6 @@ class TestSet(TestJointOps, unittest.TestCase):
         t = self.thetype(s)
         self.assertNotEqual(id(s), id(t))
 
-    @unittest.expectedFailure
     def test_set_literal(self):
         s = set([1,2,3])
         t = {1,2,3}

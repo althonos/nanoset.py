@@ -21,6 +21,7 @@ use pyo3::types::PyIterator;
 use pyo3::types::PySet;
 use pyo3::types::PyString;
 use pyo3::types::PyTuple;
+use pyo3::PyDowncastError;
 use pyo3::PyNativeType;
 
 // --- Common implementation -------------------------------------------------
@@ -164,6 +165,14 @@ macro_rules! common_impl {
                     obj.call_method1(py, "difference", others)
                         .and_then(|s| Self::try_from_obj(py, s))
                 } else {
+                    // we still need to typecheck the arguments to
+                    // comply with Python issue #37219
+                    for arg in others.iter() {
+                        if let Err(e) = PyIterator::from_object(py, arg) {
+                            return Err(e.into());
+                        }
+                    }
+
                     // substracting from an empty set always gives
                     // an empty set --> we can use `new`.
                     Ok(Self::new())
@@ -171,11 +180,28 @@ macro_rules! common_impl {
             }
 
             #[args(others = "*")]
-            fn difference_update(&self, others: &PyTuple) -> PyResult<()> {
+            fn difference_update(&mut self, others: &PyTuple) -> PyResult<()> {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+
                 if let Some(ref inner) = self.inner {
-                    let gil = Python::acquire_gil();
-                    let py = gil.python();
+                    // the difference is nonempty if the set is nonempty
                     inner.call_method1(py, "difference_update", others)?;
+
+                    // the set may have been emptied, so we need
+                    // to update `self.inner` to maintain the
+                    // invariant.
+                    if inner.cast_as::<PySet>(py).unwrap().is_empty() {
+                        self.inner = None;
+                    }
+                } else {
+                    // we still need to typecheck the arguments to
+                    // comply with Python issue #37219
+                    for arg in others.iter() {
+                        if let Err(e) = PyIterator::from_object(py, arg) {
+                            return Err(e.into());
+                        }
+                    }
                 }
 
                 Ok(())
@@ -505,11 +531,11 @@ macro_rules! common_impl {
                         (None, true) => match op {
                             Eq | Le | Ge => Ok(true.to_object(py)),
                             Ne | Lt | Gt => Ok(false.to_object(py)),
-                        }
+                        },
                         (None, false) => match op {
                             Eq | Gt | Ge => Ok(false.to_object(py)),
                             Ne | Lt | Le => Ok(true.to_object(py)),
-                        }
+                        },
                         (Some(l), _) => match op {
                             Eq => l.call_method1(py, "__eq__", (obj,)),
                             Ne => l.call_method1(py, "__ne__", (obj,)),
@@ -517,7 +543,7 @@ macro_rules! common_impl {
                             Le => l.call_method1(py, "__le__", (obj,)),
                             Gt => l.call_method1(py, "__gt__", (obj,)),
                             Ge => l.call_method1(py, "__ge__", (obj,)),
-                        }
+                        },
                     }
                 } else if let Ok(other) = obj.cast_as::<PyFrozenSet>() {
                     // unimplemented!(concat!(stringify!($cls), ".__cmp__(frozenset)"));
