@@ -148,11 +148,39 @@ load factor close to 100%.
 > By the way, you didn't mention `PicoSet`. How did you manage to get that down
 > to 24 bytes, when a slotted Python object can't be less that 56 bytes ?
 
-Easy: `PicoSet` is basically `NanoSet`, but without the garbage-collection
-protocol implementation. This saves us 32 bytes of object memory, but comes
-with a drawback: the garbage collector cannot see the allocated set *inside*
-the `PicoSet`. This does not change anything for execution, but debugging with
-a memory profiler may be harder. As such, I'd advice to avoid using `PicoSet`
+Easy: `PicoSet` is basically `NanoSet`, but without an implementation of the
+[Garbage Collector protocol](https://docs.python.org/3/c-api/gcsupport.html).
+This saves us 32 bytes of object memory, but comes with a drawback: the garbage
+collector cannot see the allocated set *inside* the `PicoSet`. This does not
+change anything for execution, but debugging with a memory profiler will be
+harder. Here is an example where we allocate **1,000,000** singletons first
+with `NanoSet`, then with `PicoSet`, using
+[`guppy3`](https://pypi.org/project/guppy3/) to check the heap:
+
+```python
+>>> l = [nanoset.NanoSet({x}) for x in range(1000000)]
+>>> guppy.hpy().heap()
+Partition of a set of 3034170 objects. Total size = 328667393 bytes.
+ Index  Count   %     Size    %   Cumulative %  Kind (class / dict of class)
+     0 1000041  33 232100648  71  232100648  71 set
+     1 1000000  33  56000000  17  288100648  88 nanoset.NanoSet
+     ...
+     3      96   0  8712752    3 324838712  99 list
+     ...
+```
+```python
+>>> l = [nanoset.PicoSet({x}) for x in range(1000000)]
+>>> guppy.hpy().heap()
+Partition of a set of 2034285 objects. Total size = 300668995 bytes.
+ Index  Count   %     Size   %   Cumulative  %  Kind (class / dict of class)
+     0 1000000  97 24000000  65  24000000    65 nanoset.PicoSet
+     1     96    0  8712752  24  32712752    89 list
+     ...
+```
+
+On the second run, we have the same order of allocated memory, but the garbage
+collector has no idea where some of the memory are, because `PicoSet` hides the
+sets it allocates. As such, I'd advise avoiding using `PicoSet`
 when debugging, which can be done easily with Python's `__debug__` flag:
 ```python
 if __debug__:
