@@ -309,7 +309,7 @@ macro_rules! common_impl {
                         .and_then(|set| Self::try_from_obj(py, set))
                 } else {
                     let mut s = PySet::empty(py)?.to_object(py);
-                    s.call_method1(py, "update", others)
+                    s.call_method1(py, "union", others)
                         .and_then(|set| Self::try_from_obj(py, set))
                 }
             }
