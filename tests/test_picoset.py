@@ -14,7 +14,7 @@ import weakref
 from random import randrange, shuffle
 from test import support
 
-from nanoset import NanoSet as set
+from nanoset import PicoSet as set
 
 
 class PassThru(Exception):
