@@ -551,7 +551,7 @@ macro_rules! common_impl {
 #[pyclass(gc, module = "nanoset")]
 #[derive(Debug, Default)]
 /// A set that has lower memory footprint if it is empty.
-struct NanoSet {
+pub struct NanoSet {
     inner: Option<PyObject>,
 }
 
@@ -579,7 +579,7 @@ impl PyGCProtocol for NanoSet {
 #[pyclass(module = "nanoset")]
 #[derive(Debug, Default)]
 /// A set that has lower memory footprint if it is empty.
-struct PicoSet {
+pub struct PicoSet {
     inner: Option<PyObject>,
 }
 
