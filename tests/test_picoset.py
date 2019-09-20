@@ -295,7 +295,7 @@ class TestJointOps():
             elem.sub = elem
             elem.set = set([elem])
 
-    @unittest.skip(f'cannot subclass {set.__name__}')
+    @unittest.skip('cannot subclass {}'.format(set.__name__))
     def test_subclass_with_custom_hash(self):
         # Bug #1257731
         class H(self.thetype):
