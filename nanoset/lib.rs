@@ -31,8 +31,43 @@ macro_rules! common_impl {
                 Self::default()
             }
 
-            pub fn from_object(obj: PyObject) -> Self {
+            pub fn from_set(obj: PyObject) -> Self {
                 Self { inner: Some(obj) }
+            }
+
+            pub fn try_from_any(py: Python, any: &PyAny) -> PyResult<Self> {
+                Self::try_from_obj(py, any.to_object(py))
+            }
+
+            pub fn try_from_obj(py: Python, obj: PyObject) -> PyResult<Self> {
+                if let Ok(s) = obj.cast_as::<PySet>(py) {
+                    if s.is_empty() {
+                        Ok(Self::new())
+                    } else {
+                        s.to_object(py).call_method0(py, "copy").map(Self::from_set)
+                    }
+                } else {
+                    let iterator = PyIterator::from_object(py, &obj)?;
+                    Self::try_from_iterator(py, iterator)
+                }
+            }
+
+            pub fn try_from_iterator(py: Python, it: PyIterator) -> PyResult<Self> {
+                let items: PyResult<Vec<&PyAny>> = it.collect();
+                let res = items?;
+
+                if res.is_empty() {
+                    Ok(Self::default())
+                } else {
+                    let set = PySet::new(py, res.as_slice())?;
+                    Ok(Self::from_set(set.to_object(py)))
+                }
+            }
+        }
+
+        impl FromPy<PySet> for $cls {
+            fn from_py(set: PySet, py: Python) -> Self {
+                Self::from_set(set.to_object(py))
             }
         }
 
@@ -58,22 +93,42 @@ macro_rules! common_impl {
                 if let Some(it) = iterable {
                     let gil = Python::acquire_gil();
                     let py = gil.python();
-
-                    let iterator = PyIterator::from_object(py, it)?;
-                    let items: PyResult<Vec<&PyAny>> = iterator.collect();
-                    let res = items?;
-
-                    if res.is_empty() {
-                        self.inner = None
-                    } else {
-                        let set = PySet::new(py, res.as_slice())?;
-                        self.inner = Some(set.to_object(py));
-                    }
+                    *self = Self::try_from_any(py, it)?;
                 } else {
                     self.inner = None;
                 }
-
                 Ok(())
+            }
+
+            // fn __getstate__(&self) -> PyResult<PyObject> {
+            //     let gil = Python::acquire_gil();
+            //     let py = gil.python();
+            //     match self.inner {
+            //         None => Ok(py.None()),
+            //         Some(ref set) => Ok(set.clone_ref(py)),
+            //     }
+            // }
+            //
+            // fn __setstate__(&mut self, state: PyObject) {
+            //     unimplemented!()
+            // }
+
+            fn __reduce__(&self) -> PyResult<PyObject> {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+                let ty = <$cls as pyo3::type_object::PyTypeObject>::type_object();
+
+                match self.inner {
+                    None => Ok(ty.to_object(py)),
+                    Some(ref set) => Ok(
+                        (
+                            ty.to_object(py),
+                            (set.call_method0(py, "copy")?,)
+                        )
+                            .to_object(py)
+                    )
+                }
+
             }
 
             fn add(&mut self, item: &PyAny) -> PyResult<()> {
@@ -101,7 +156,7 @@ macro_rules! common_impl {
                     Some(ref inner) => {
                         let gil = Python::acquire_gil();
                         let py = gil.python();
-                        inner.call_method0(py, "__iter__").map(Self::from_object)
+                        inner.call_method0(py, "copy").map(Self::from_set)
                     }
                 }
             }
@@ -111,8 +166,9 @@ macro_rules! common_impl {
                     None => Ok(Self::new()),
                     Some(ref obj) => {
                         let gil = Python::acquire_gil();
-                        obj.call_method1(gil.python(), "difference", (other,))
-                            .map(Self::from_object)
+                        let py = gil.python();
+                        obj.call_method1(py, "difference", (other,))
+                            .and_then(|obj| Self::try_from_obj(py, obj))
                     }
                 }
             }
@@ -122,9 +178,19 @@ macro_rules! common_impl {
                     None => Ok(Self::new()),
                     Some(ref obj) => {
                         let gil = Python::acquire_gil();
-                        obj.call_method1(gil.python(), "intersection", (other,))
-                            .map(Self::from_object)
+                        let py = gil.python();
+                        obj.call_method1(py, "intersection", (other,))
+                            .and_then(|obj| Self::try_from_obj(py, obj))
                     }
+                }
+            }
+
+            fn isdisjoint(&self, other: &PyAny) -> PyResult<PyObject> {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+                match self.inner {
+                    None => Ok(true.to_object(py)),
+                    Some(ref obj) => obj.call_method1(py, "isdisjoint", (other,)),
                 }
             }
 
@@ -141,6 +207,30 @@ macro_rules! common_impl {
                 }
 
                 KeyError::into("pop from an empty set")
+            }
+
+            fn symmetric_difference(&self, other: &PyAny) -> PyResult<Self> {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+                match self.inner {
+                    None => Self::try_from_any(py, other),
+                    Some(ref obj) => {
+                        obj.call_method1(py, "symmetric_difference", (other,))
+                            .and_then(|obj| Self::try_from_obj(py, obj))
+                    }
+                }
+            }
+
+            fn union(&self, other: &PyAny) -> PyResult<Self> {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
+                match self.inner {
+                    None => Self::try_from_any(py, other),
+                    Some(ref obj) => {
+                        obj.call_method1(py, "union", (other,))
+                            .map(Self::from_set)
+                    }
+                }
             }
         }
 
@@ -160,16 +250,20 @@ macro_rules! common_impl {
 
         #[pyproto]
         impl PyNumberProtocol for $cls {
-            fn __and__(lhs: &mut Self, rhs: &PyAny) -> PyResult<Self> {
-                // TODO: mandatory type check of right hand expression
-                match lhs.inner {
-                    None => Ok(Self::new()),
-                    Some(ref set) => {
-                        let gil = Python::acquire_gil();
-                        set.call_method1(gil.python(), "__and__", (rhs,))
-                            .map(Self::from_object)
-                    }
-                }
+            fn __and__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
+                lhs.intersection(rhs)
+            }
+
+            fn __sub__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
+                lhs.difference(rhs)
+            }
+
+            fn __or__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
+                lhs.union(rhs)
+            }
+
+            fn __xor__(lhs: &Self, rhs: &PyAny) -> PyResult<Self> {
+                lhs.symmetric_difference(rhs)
             }
         }
 
@@ -256,13 +350,12 @@ macro_rules! common_impl {
                 }
             }
         }
-
     };
 }
 
 // ---------------------------------------------------------------------------
 
-#[pyclass(gc)]
+#[pyclass(gc, module="nanoset")]
 #[derive(Debug, Default)]
 /// A set that has lower memory footprint if it is empty.
 struct NanoSet {
@@ -290,7 +383,7 @@ impl PyGCProtocol for NanoSet {
 
 // ---------------------------------------------------------------------------
 
-#[pyclass]
+#[pyclass(module="nanoset")]
 #[derive(Debug, Default)]
 /// A set that has lower memory footprint if it is empty.
 struct PicoSet {
