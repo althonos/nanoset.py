@@ -520,7 +520,6 @@ class TestSet(TestJointOps, unittest.TestCase):
         for c in (self.word + self.otherword):
             self.assertIn(c, self.s)
 
-    @unittest.expectedFailure
     def test_intersection_update(self):
         retval = self.s.intersection_update(self.otherword)
         self.assertEqual(retval, None)

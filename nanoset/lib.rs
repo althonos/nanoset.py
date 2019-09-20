@@ -205,11 +205,19 @@ macro_rules! common_impl {
             }
 
             #[args(others = "*")]
-            fn intersection_update(&self, others: &PyTuple) -> PyResult<()> {
+            fn intersection_update(&mut self, others: &PyTuple) -> PyResult<()> {
+                // the intersection is nonempty if the set is nonempty
                 if let Some(ref inner) = self.inner {
                     let gil = Python::acquire_gil();
                     let py = gil.python();
                     inner.call_method1(py, "intersection_update", others)?;
+
+                    // the set may have been emptied, so we need
+                    // to update `self.inner` to maintain the
+                    // invariant.
+                    if inner.cast_as::<PySet>(py).unwrap().is_empty() {
+                        self.inner = None;
+                    }
                 }
 
                 Ok(())
@@ -493,8 +501,24 @@ macro_rules! common_impl {
                         },
                     }
                 } else if let Ok(other) = obj.cast_as::<PySet>() {
-                    // unimplemented!(concat!(stringify!($cls), ".__cmp__(set)"));
-                    Ok(py.NotImplemented())
+                    match (&self.inner, other.is_empty()) {
+                        (None, true) => match op {
+                            Eq | Le | Ge => Ok(true.to_object(py)),
+                            Ne | Lt | Gt => Ok(false.to_object(py)),
+                        }
+                        (None, false) => match op {
+                            Eq | Gt | Ge => Ok(false.to_object(py)),
+                            Ne | Lt | Le => Ok(true.to_object(py)),
+                        }
+                        (Some(l), _) => match op {
+                            Eq => l.call_method1(py, "__eq__", (obj,)),
+                            Ne => l.call_method1(py, "__ne__", (obj,)),
+                            Lt => l.call_method1(py, "__lt__", (obj,)),
+                            Le => l.call_method1(py, "__le__", (obj,)),
+                            Gt => l.call_method1(py, "__gt__", (obj,)),
+                            Ge => l.call_method1(py, "__ge__", (obj,)),
+                        }
+                    }
                 } else if let Ok(other) = obj.cast_as::<PyFrozenSet>() {
                     // unimplemented!(concat!(stringify!($cls), ".__cmp__(frozenset)"));
                     Ok(py.NotImplemented())
