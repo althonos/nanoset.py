@@ -592,5 +592,19 @@ fn nanoset(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<NanoSet>()?;
     m.add_class::<PicoSet>()?;
     m.add("__build__", pyo3_built::pyo3_built!(py, built))?;
+
+    let cabc = py.import("collections.abc")?;
+    let set = cabc.get("Set")?.to_object(py);
+    set.call_method1(
+        py,
+        "register",
+        (<NanoSet as pyo3::type_object::PyTypeObject>::type_object(),),
+    )?;
+    set.call_method1(
+        py,
+        "register",
+        (<PicoSet as pyo3::type_object::PyTypeObject>::type_object(),),
+    )?;
+
     Ok(())
 }
