@@ -2,9 +2,28 @@
 name = "nanoset-py"
 version = "0.1.0"
 authors = ["Martin Larralde <martin.larralde@embl.de>"]
-publish = false
 edition = "2018"
+license = "MIT"
+description = "A memory-optimized wrapper for Python sets likely to be empty."
+repository = "https://github.com/althonos/nanoset.py"
+homepage = "https://pypi.org/projects/nanoset"
+readme = "README.md"
+keywords = []
+categories = []
 build = "nanoset/build.rs"
+
+[package.metadata.docs.rs]
+features = [ "_doc" ]
+
+[badges.travis-ci]
+repository = "althonos/nanoset.py"
+[badges.is-it-maintained-issue-resolution]
+repository = "fastobo/fastobo"
+[badges.maintenance]
+status     = "passively-maintained"
+
+[features]
+_doc = []
 
 [build-dependencies]
 built = "0.3.1"
