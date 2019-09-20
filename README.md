@@ -177,7 +177,7 @@ of our sets is:
 This gives us the following graph, which shows how much memory you can save
 depending of the ratio of empty sets you have at runtime:
 
-![sizegraph](https://github.com/althonos/nanoset.py/raw/master/static/sizegraph.svg)
+![sizegraph](https://github.com/althonos/nanoset.py/raw/master/static/sizegraph.svg?sanitize=true)
 
 If we get back to our NCBITaxon example, we have a total of **1,595,237** nodes
 and **1,130,671** leaves, which means that by using sets we are allocating
