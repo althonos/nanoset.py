@@ -71,7 +71,6 @@ class TestJointOps():
     def test_len(self):
         self.assertEqual(len(self.s), len(self.d))
 
-    @unittest.expectedFailure
     def test_contains(self):
         for c in self.letters:
             self.assertEqual(c in self.s, c in self.d)
@@ -400,7 +399,6 @@ class TestSet(TestJointOps, unittest.TestCase):
         t = self.thetype(s)
         self.assertNotEqual(id(s), id(t))
 
-    @unittest.expectedFailure
     def test_set_literal(self):
         s = set([1,2,3])
         t = {1,2,3}
@@ -428,6 +426,10 @@ class TestSet(TestJointOps, unittest.TestCase):
         self.s.clear()
         self.assertEqual(self.s, set())
         self.assertEqual(len(self.s), 0)
+
+    @unittest.expectedFailure
+    def test_contains(self):
+        super().test_contains()
 
     def test_copy(self):
         dup = self.s.copy()
