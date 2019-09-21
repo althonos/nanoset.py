@@ -11,6 +11,7 @@ setuptools.setup(
         "nanoset",
         path="Cargo.toml",
         binding=rust.Binding.PyO3,
-        strip=rust.Strip.Debug
+        strip=rust.Strip.Debug,
+        features=["extension-module"],
     )],
 )
