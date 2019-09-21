@@ -23,14 +23,14 @@ from nanoset import PicoSet as set
 
 ## 🚩 Table of Contents
 
-- [Overview](#overview)
-  * [About Python memory usage](#about-python-memory-usage)
-  * [Simple example usecase](#simple-example-usecase)
-  * [Implementation](#implementation)
-  * [Statistics](#statistics)
-- [Installing](#installing)
-- [API Reference](#api-reference)
-- [License](#license)
+- [Overview](#%EF%B8%8F-overview)
+  * [About Python memory usage](#%EF%B8%8F-about-python-memory-usage)
+  * [Simple example usecase](#-simple-example-usecase)
+  * [Implementation](#-implementation)
+  * [Statistics](#-statistics)
+- [Installing](#-installing)
+- [API Reference](#-api-reference)
+- [License](#%EF%B8%8F-license)
 <!-- - [Building](#building)
 - [API documentation](#api-documentation)
 - [Running tests](#running-tests)
