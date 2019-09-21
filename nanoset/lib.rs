@@ -22,9 +22,7 @@ use pyo3::types::PyAny;
 use pyo3::types::PyFrozenSet;
 use pyo3::types::PyIterator;
 use pyo3::types::PySet;
-use pyo3::types::PyString;
 use pyo3::types::PyTuple;
-use pyo3::PyDowncastError;
 use pyo3::PyNativeType;
 
 // --- Common implementation -------------------------------------------------
@@ -312,10 +310,10 @@ macro_rules! common_impl {
                     // `set2.remove(frozenset(set1))`, so we have to check if
                     // `set1` is `NanoSet` to reproduce that behaviour.
                     if let Ok(ref other) = item.cast_as::<$cls>() {
-                        let res = if let Some(ref obj) = other.inner {
-                            inner.call_method1(py, "remove", (obj.clone_ref(py),))
+                        if let Some(ref obj) = other.inner {
+                            inner.call_method1(py, "remove", (obj.clone_ref(py),))?
                         } else {
-                            inner.call_method1(py, "remove", (PyFrozenSet::empty(py)?,))
+                            inner.call_method1(py, "remove", (PyFrozenSet::empty(py)?,))?
                         };
                     } else {
                         inner.call_method1(py, "remove", (item,))?;
@@ -370,7 +368,7 @@ macro_rules! common_impl {
                 } else {
                     // The set was empty before, but it may still be
                     // after the union --> we must use `try_from_obj`.
-                    let mut s = PySet::empty(py)?.to_object(py);
+                    let s = PySet::empty(py)?.to_object(py);
                     s.call_method1(py, "union", others)
                         .and_then(|set| Self::try_from_obj(py, set))
                 }
@@ -548,7 +546,7 @@ macro_rules! common_impl {
                             Ge => l.call_method1(py, "__ge__", (obj,)),
                         },
                     }
-                } else if let Ok(other) = obj.cast_as::<PyFrozenSet>() {
+                } else if let Ok(_other) = obj.cast_as::<PyFrozenSet>() {
                     // unimplemented!(concat!(stringify!($cls), ".__cmp__(frozenset)"));
                     Ok(py.NotImplemented())
                 } else {
