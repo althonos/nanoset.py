@@ -5,4 +5,4 @@
 # --- Check versions ---------------------------------------------------------
 
 log Checking versions in package metadata
-python ci/vercheck.py
+python3 ci/vercheck.py
