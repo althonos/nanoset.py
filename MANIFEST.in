@@ -5,6 +5,5 @@ include COPYING
 include CHANGELOG.md
 include README.md
 
-recursive-include derive Cargo.toml *.rs
-recursive-include src *.rs
-recursive-include tests *.py *.obo
+recursive-include nanoset *.rs
+recursive-include tests *.py
