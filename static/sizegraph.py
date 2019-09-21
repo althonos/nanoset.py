@@ -18,20 +18,28 @@ def with_picoset(x):
 
 listx = list(range(101))
 
-plt.plot(listx, list(map(with_set, listx)), label="with `set`")
-plt.plot(listx, list(map(with_nanoset, listx)), label="with `nanoset.NanoSet`")
-plt.plot(listx, list(map(with_picoset, listx)), label="with `nanoset.PicoSet`")
-plt.legend([
-    "with $set$",
-    "with $nanoset.NanoSet$",
-    "with $nanoset.PicoSet$",
-])
+plt.figure(figsize=[12, 8])
+plt.xkcd(scale=0.5)
+plt.axvline(76, linewidth=0.5, linestyle='--', color="grey")
+plt.axvline(89.5, linewidth=0.5, linestyle='--', color="grey")
+plt.axhline(1.1, linewidth=0.5, linestyle='--', color="grey")
+plt.axhline(1.24, linewidth=0.5, linestyle='--', color="grey")
+plt.plot(listx, list(map(with_set, listx)), label="with $set$")
+plt.plot(listx, list(map(with_nanoset, listx)), label="with $nanoset.NanoSet$")
+plt.plot(listx, list(map(with_picoset, listx)), label="with $nanoset.PicoSet$")
+plt.legend()
 plt.xlim([0, 100])
 plt.ylim([0, 1.4])
 plt.gca().yaxis.set_major_formatter(PercentFormatter(xmax=1))
 plt.gca().xaxis.set_major_formatter(PercentFormatter(xmax=100))
 plt.xlabel("Ratio of non-empty sets")
 plt.ylabel("Ratio of memory used")
-plt.axvline(89.5, color="grey")
-plt.grid()
+plt.annotate('124%', xy=(0, 1.24), xytext=(-7, 1.24), color="grey")
+plt.annotate('110%', xy=(0, 1.24), xytext=(-6.8, 1.08), color="grey")
+
+plt.annotate('76%', xy=(0, 1.24), xytext=(73, -0.0725), color="grey")
+plt.annotate('90%', xy=(0, 1.24), xytext=(88, -0.0725), color="grey")
+
+
+
 plt.savefig(os.path.abspath(os.path.join(__file__, '..', 'sizegraph.svg')))
