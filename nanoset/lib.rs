@@ -1,3 +1,6 @@
+#![feature(doc_cfg, external_doc)]
+#![doc(include = "../README.md")]
+
 extern crate pyo3;
 extern crate pyo3_built;
 

@@ -12,8 +12,9 @@ keywords = []
 categories = []
 build = "nanoset/build.rs"
 
-[package.metadata.docs.rs]
-features = [ "_doc" ]
+[lib]
+crate-type = ["cdylib"]
+path = "nanoset/lib.rs"
 
 [badges.travis-ci]
 repository = "althonos/nanoset.py"
@@ -22,16 +23,9 @@ repository = "fastobo/fastobo"
 [badges.maintenance]
 status     = "passively-maintained"
 
-[features]
-_doc = []
-
 [build-dependencies]
 built = "0.3.1"
 
 [dependencies]
 pyo3 = "0.8.0"
 pyo3-built = "0.3.0"
-
-[lib]
-crate-type = ["cdylib"]
-path = "nanoset/lib.rs"

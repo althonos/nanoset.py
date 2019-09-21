@@ -23,14 +23,14 @@ from nanoset import PicoSet as set
 
 ## 🚩 Table of Contents
 
-- [Overview](#%EF%B8%8F-overview)
-  * [About Python memory usage](#%EF%B8%8F-about-python-memory-usage)
+- [Overview](#-overview)
+  * [About Python memory usage](#-about-python-memory-usage)
   * [Simple example usecase](#-simple-example-usecase)
   * [Implementation](#-implementation)
   * [Statistics](#-statistics)
 - [Installing](#-installing)
 - [API Reference](#-api-reference)
-- [License](#%EF%B8%8F-license)
+- [License](#-license)
 <!-- - [Building](#building)
 - [API documentation](#api-documentation)
 - [Running tests](#running-tests)
@@ -43,7 +43,7 @@ from nanoset import PicoSet as set
 
 ## 🏞️ Overview
 
-### ⚡️ About Python memory usage
+### 🐏 About Python memory usage
 
 Python is a great programming language (*fight me*), but sometimes you start
 questioning why it does things in certain ways. Since Python 2.3, the standard
@@ -269,6 +269,6 @@ Well, this is a comprehensive wrapper for `set`, so you can just read the
 of [CPython](https://github.com/python/cpython).
 
 
-## ⚖️ License
+## 📜 License
 
 This library is provided under the open-source [MIT license](https://choosealicense.com/licenses/mit/).
