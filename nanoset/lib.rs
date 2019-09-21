@@ -643,6 +643,8 @@ fn nanoset(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<NanoSet>()?;
     m.add_class::<PicoSet>()?;
     m.add("__build__", pyo3_built::pyo3_built!(py, built))?;
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    m.add("__author__", env!("CARGO_PKG_AUTHORS").replace(':', "\n"))?;
 
     let cabc = py.import("collections.abc")?;
     let set = cabc.get("Set")?.to_object(py);
