@@ -7,9 +7,9 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square&maxAge=2678400)](https://choosealicense.com/licenses/mit/)
 [![Source](https://img.shields.io/badge/source-GitHub-303030.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/nanoset.py/)
 [![PyPI](https://img.shields.io/pypi/v/nanoset.svg?style=flat-square&maxAge=600)](https://pypi.org/project/nanoset)
-[![Wheel](https://img.shields.io/pypi/wheel/nanoset.svg?style=flat-square&maxAge=2678400)](https://pypi.org/project/nanoset/#files)
+[![Wheel](https://img.shields.io/pypi/wheel/nanoset.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/nanoset/#files)
 [![Python Versions](https://img.shields.io/pypi/pyversions/nanoset.svg?style=flat-square&maxAge=600)](https://pypi.org/project/nanoset/#files)
-[![PyPI - Implementation](https://img.shields.io/pypi/implementation/nanoset.svg?style=flat-square&maxAge=600)](https://pypi.org/project/nanoset/#files)
+[![Python Implementations](https://img.shields.io/pypi/implementation/nanoset.svg?style=flat-square&maxAge=600)](https://pypi.org/project/nanoset/#files)
 [![Changelog](https://img.shields.io/badge/keep%20a-changelog-8A0707.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/nanoset.py/blob/master/CHANGELOG.md)
 [![GitHub issues](https://img.shields.io/github/issues/althonos/nanoset.py.svg?style=flat-square&maxAge=600)](https://github.com/althonos/nanoset.py/issues)
 
@@ -31,17 +31,9 @@ from nanoset import PicoSet as set
 - [Installing](#-installing)
 - [API Reference](#-api-reference)
 - [License](#-license)
-<!-- - [Building](#building)
-- [API documentation](#api-documentation)
-- [Running tests](#running-tests)
-- [Time and space complexity](#time-and-space-complexity)
-- [Test data](#test-data)
-- [Development and contributing](#development-and-contributing)
-- [Publication](#publication)
-- [Acknowledgements](#acknowledgements) -->
 
 
-## 🗺️ Overview
+## 🗺️  Overview
 
 ### 🐏 About Python memory usage
 

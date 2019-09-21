@@ -19,7 +19,7 @@ path = "nanoset/lib.rs"
 [badges.travis-ci]
 repository = "althonos/nanoset.py"
 [badges.is-it-maintained-issue-resolution]
-repository = "fastobo/fastobo"
+repository = "althonos/nanoset.py"
 [badges.maintenance]
 status     = "passively-maintained"
 
