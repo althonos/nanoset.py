@@ -13,7 +13,7 @@
 [![Changelog](https://img.shields.io/badge/keep%20a-changelog-8A0707.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/nanoset.py/blob/master/CHANGELOG.md)
 [![GitHub issues](https://img.shields.io/github/issues/althonos/nanoset.py.svg?style=flat-square&maxAge=600)](https://github.com/althonos/nanoset.py/issues)
 
-## TL;DR
+## ⏱️ TL;DR
 
 Save up to 85% of the memory used by empty `set` instances in your code with
 a single line of code:
@@ -21,11 +21,11 @@ a single line of code:
 from nanoset import PicoSet as set
 ```
 
-## Contents
+## 🚩 Table of Contents
 
 - [Overview](#overview)
   * [About Python memory usage](#about-python-memory-usage)
-  * [Simple Example Usecase](#simple-example-usecase)
+  * [Simple example usecase](#simple-example-usecase)
   * [Implementation](#implementation)
   * [Statistics](#statistics)
 - [Installing](#installing)
@@ -41,9 +41,9 @@ from nanoset import PicoSet as set
 - [Acknowledgements](#acknowledgements) -->
 
 
-## Overview
+## 🏞️ Overview
 
-### About Python memory usage
+### ⚡️ About Python memory usage
 
 Python is a great programming language (*fight me*), but sometimes you start
 questioning why it does things in certain ways. Since Python 2.3, the standard
@@ -78,7 +78,7 @@ sad when you are used to [Rust](https://www.rust-lang.org/), where most
 
 *Actually, that's a lie, but keep reading*.
 
-### Simple example usecase
+### 💡 Simple example usecase
 
 Let's imagine we are building an ordered graph data structure, where we may
 want to store [taxonomic data](https://en.wikipedia.org/wiki/Taxonomic_database),
@@ -128,7 +128,7 @@ According to these, we are going to have **1,130,671** leaves for a total of
 Well, glad we are on the same level: this is what **`nanoset`** does for you!
 
 
-### Implementation
+### 🔨 Implementation
 
 Actually, it's not magic at all. Just imagine a class `NanoSet` that works as
 a [proxy](https://www.tutorialspoint.com/python_design_patterns/python_design_patterns_proxy.htm)
@@ -219,7 +219,7 @@ This will cause `PicoSet` to be used instead of `NanoSet` when running Python
 with the `-O` flag.
 
 
-### Statistics
+### 📈 Statistics
 
 Okay, so let's do some maths. With `S = 232` the size of an allocated set,
 `s` the size of the wrapper (`56` for `NanoSet`, `24` for `PicoSet`), the
@@ -242,14 +242,14 @@ can reduce this to **188.0 MiB**, or even to **139.3 MiB** with `PicoSet`!
 **We just saved about 50% memory just by using `NanoSet` in place of `set`.**
 
 
-## Installing
+## 🔧 Installing
 
 This module is implemented in Rust, but native [Python wheels](https://pythonwheels.com/)
 are compiled for the following platforms:
 
 * Windows x86-64: CPython 3.5, 3.6, 3.7
-* Linux x86-64: CPython 3.5, 3.6, 3.7, and PyPy 3.7
-* OSX x86-64: CPython 3.6, 3.7, and PyPy 3.7
+* Linux x86-64: CPython 3.5, 3.6, 3.7
+* OSX x86-64: CPython 3.6, 3.7
 
 If you platform is not among these, you will need a
 [working Rust `nightly` toolchain](https://www.rust-lang.org/tools/install)
@@ -261,7 +261,7 @@ Then, simply install with `pip`:
 $ pip install --user nanoset
 ```
 
-## API Reference
+## 📖 API Reference
 
 Well, this is a comprehensive wrapper for `set`, so you can just read the
 [standard library documentation](https://docs.python.org/3.7/library/stdtypes.html#set-types-set-frozenset). Except for some very particular edge-cases, `NanoSet` and `PicoSet` both pass the
@@ -269,6 +269,6 @@ Well, this is a comprehensive wrapper for `set`, so you can just read the
 of [CPython](https://github.com/python/cpython).
 
 
-## License
+## ⚖️ License
 
 This library is provided under the open-source [MIT license](https://choosealicense.com/licenses/mit/).
