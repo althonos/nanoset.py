@@ -8,8 +8,8 @@ description = "A memory-optimized wrapper for Python sets likely to be empty."
 repository = "https://github.com/althonos/nanoset.py"
 homepage = "https://pypi.org/projects/nanoset"
 readme = "README.md"
-keywords = []
-categories = []
+keywords = ["Python", "set", "memory", "pyo3", "optimisation"]
+categories = ["data-structures", "api-bindings"]
 build = "nanoset/build.rs"
 
 [lib]
