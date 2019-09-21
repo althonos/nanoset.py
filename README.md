@@ -31,7 +31,7 @@ collection, which is a specialized container for membership testing. On the
 contrary to the ubiquitous [`list`](https://docs.python.org/3.7/library/stdtypes.html#list)
 collection, `set` is not ordered (or, more accurately, *does not let you access
 the order it stores the elements in*). The other feature of `set` is that just
-like their mathematical counterpart, they do not allow duplicate, which is very
+like its mathematical counterpart, it does not allow duplicates, which is very
 useful for some algorithms. However, **sets are memory-expensive**:
 ```python
 >>> import sys
@@ -96,13 +96,13 @@ Biotechnology Information:
         Maximum depth: 38
         Number of leaves**: 1130671
 
-According to these, we are going to have **1,130,671** leavers for a total of
+According to these, we are going to have **1,130,671** leaves for a total of
 **1,595,237** nodes, which means **70.8%** of empty sets. Now you may think:
 
 > Ok, I got this. But in this case, I just need a special case for leaves, where
-> instead of storing an empty set of `neighbors`, I just store `None`, since it
-> only has a size of 16 bytes! And then, I can replace `None` with an actual
-> set if I want to add a new edge from that node!
+> instead of storing an empty set of `neighbors`, I store a reference to `None`
+> when that set would be empty. I can then replace that reference with an actual
+> set only when I want to add new edges from that node. Problem solved!
 
 Well, glad we are on the same level: this is what **`nanoset`** does for you!
 
@@ -110,8 +110,9 @@ Well, glad we are on the same level: this is what **`nanoset`** does for you!
 ## Implementation: Where the magic happens
 
 Actually, it's not magic at all. Just imagine a class `NanoSet` that works as
-a [proxy](https://www.tutorialspoint.com/python_design_patterns/python_design_patterns_proxy.htm) to an actual Python `set` it wraps, but which is only allocated when
-some data actually needs to be stored:
+a [proxy](https://www.tutorialspoint.com/python_design_patterns/python_design_patterns_proxy.htm)
+to an actual Python `set` it wraps, but which is only allocated when some data
+actually needs to be stored:
 
 ```python
 class NanoSet(collections.abc.Set):
@@ -127,34 +128,35 @@ class NanoSet(collections.abc.Set):
     # ... the rest of the `set` API ...
 ```
 
-That's about it! However, doing it like so in Python would not be the extremely
+That's about it! However, doing it like so in Python would not be super
 efficient, as the resulting object would be **64** bytes. Using
 [slots](http://book.pythontips.com/en/latest/__slots__magic.html), this can be
-reduced to 56 bytes, which is what we get with `nanoset.NanoSet`.
+reduced to **56** bytes, which is on par to what we get with **`NanoSet`**.
 
 **Note that these values are only when the inner set is empty!** When actually
-allocating the set to store our values, we allocate an additional **232** bytes of
-data. This means that using **`nanoset`** creates an overhead, since a non-empty
-set will now weigh **288** bytes.
+allocating the set to store our values, we allocate an additional **232** bytes
+of data. This means that using **`NanoSet`** creates an overhead, since a
+non-empty set will now weigh **288** bytes (**256** bytes for **`PicoSet`**).
 
 > Well, I was way better off with my approach of storing `Optional[Set]`
 > everywhere then, I don't want to pay any additional cost for nonempty sets!
 
-Sure, this is not great. But that would mean changing your whole code. And
-actually, you may not gain that much memory from doing that compared to using
-`nanoset`, since the only time the wrapper performs badly is when you have a
-load factor close to 100%.
+Sure. But that would mean changing your whole code. And actually, you may not
+gain that much memory from doing that compared to using `nanoset`, since the
+only time the wrapper performs badly is when you have a load factor of more than
+90%. Furthermore, just to give you some perspective, `sys.getsizeof(1)` is
+**24** bytes as well.
 
 > By the way, you didn't mention `PicoSet`. How did you manage to get that down
-> to 24 bytes, when a slotted Python object can't be less that 56 bytes ?
+> to **24** bytes, when a slotted Python object can't be less that **56** bytes?
 
 Easy: `PicoSet` is basically `NanoSet`, but without an implementation of the
 [Garbage Collector protocol](https://docs.python.org/3/c-api/gcsupport.html).
-This saves us 32 bytes of object memory, but comes with a drawback: the garbage
-collector cannot see the allocated set *inside* the `PicoSet`. This does not
-change anything for execution, but debugging with a memory profiler will be
-harder. Here is an example where we allocate **1,000,000** singletons first
-with `NanoSet`, then with `PicoSet`, using
+This saves us **32** bytes of object memory, but comes with a drawback: the
+garbage collector cannot see the set allocated *inside* the `PicoSet`. This
+does not change anything for execution, but debugging with a memory profiler
+will be harder. Here is an example where we allocate **1,000,000** singletons
+first with `NanoSet`, then with `PicoSet`, using
 [`guppy3`](https://pypi.org/project/guppy3/) to check the heap:
 
 ```python
@@ -178,17 +180,22 @@ Partition of a set of 2034285 objects. Total size = 300668995 bytes.
      ...
 ```
 
-On the second run, we have the same order of allocated memory, but the garbage
-collector has no idea where some of the memory are, because `PicoSet` hides the
-sets it allocates. As such, I'd advise avoiding using `PicoSet`
-when debugging, which can be done easily with Python's `__debug__` flag:
+On the second run, we have about the same order of allocated memory, saving
+**28 MB** (**28** bytes saved by switched from `NanoSet` to `PicoSet` times
+**1,000,000** instances). However, the garbage collector has no idea where
+some of the memory is, because `PicoSet` hides the sets it allocates (this is
+fine: it will be deallocated along with the `PicoSet`).
+
+As such, I'd advise avoiding using `PicoSet` when debugging, which can be done
+easily with Python's `__debug__` flag:
 ```python
 if __debug__:
     from nanoset import NanoSet as set
 else:
     from nanoset import PicoSet as set
 ```
-This will cause `PicoSet` to be used when running Python with the `-O` flag.
+This will cause `PicoSet` to be used instead of `NanoSet` when running Python
+with the `-O` flag.
 
 
 ## Statistics: Where I convice you to use this
@@ -199,8 +206,7 @@ Okay, so let's do some maths. With `S = 232` the size of an allocated set,
 of our sets is:
 
   * if we're using `set`: **S \* x / (S \* x) = 100%** (we use that as a reference)
-  * if we're using `NanoSet`: **((S + 56) \* x + 56 \* (100 - x)) / (S \* x)**
-  * if we're using `PicoSet`: **((S + 56) \* x + 56 \* (100 - x)) / (S * x)**
+  * if we're using `nanoset`: **((S + s) \* x + s \* (100 - x)) / (S \* x)**
 
 This gives us the following graph, which shows how much memory you can save
 depending of the ratio of empty sets you have at runtime:
@@ -230,7 +236,7 @@ as well as the [`setuptools-rust`](https://pypi.org/project/setuptools-rust/)
 library installed to build the extension module.
 
 
-## Licensing: Where you learn when you can use this
+## Licensing: Where realize you can use this anywhere
 
 This library is provided under the open-source
 [MIT license](https://choosealicense.com/licenses/mit/), which lets you do
