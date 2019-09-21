@@ -60,15 +60,15 @@ jobs:
       <<: *test-python
     - python: 3.7
       <<: *test-python
-    - python: pypy3
-      <<: *test-python
+    # - python: pypy3
+    #   <<: *test-python
     # OSX
     - env: PYTHON=python3.6
       <<: *test-python-osx
     - env: PYTHON=python3.7
       <<: *test-python-osx
-    - env: PYTHON=pypy3
-      <<: *test-python-osx
+    # - env: PYTHON=pypy3
+    #   <<: *test-python-osx
 
 deploy:
   provider: script

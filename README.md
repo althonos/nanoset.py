@@ -1,4 +1,4 @@
-# `nanoset.py`
+# `nanoset.py` [![starme](https://img.shields.io/github/stars/althonos/nanoset.py.svg?style=social&label=Star)](https://github.com/althonos/nanoset.py)
 
 *A memory-optimized wrapper for Python sets likely to be empty.*
 
@@ -13,16 +13,37 @@
 [![Changelog](https://img.shields.io/badge/keep%20a-changelog-8A0707.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/nanoset.py/blob/master/CHANGELOG.md)
 [![GitHub issues](https://img.shields.io/github/issues/althonos/nanoset.py.svg?style=flat-square&maxAge=600)](https://github.com/althonos/nanoset.py/issues)
 
-## TL;DR: Where you get curious
+## TL;DR
 
-If you have code with at least **10%** empty sets at runtime, you can reduce
-the memory usage of that code with a simple line of code:
+Save up to 85% of the memory used by empty `set` instances in your code with
+a single line of code:
 ```python
 from nanoset import PicoSet as set
 ```
-and save up to 85% of the memory used by `set` instances during execution!
 
-## Introduction: Where I tell you about Python memory usage
+## Contents
+
+- [Overview](#overview)
+  * [About Python memory usage](#about-python-memory-usage)
+  * [Simple Example Usecase](#simple-example-usecase)
+  * [Implementation](#implementation)
+  * [Statistics](#statistics)
+- [Installing](#installing)
+- [API Reference](#api-reference)
+- [License](#license)
+<!-- - [Building](#building)
+- [API documentation](#api-documentation)
+- [Running tests](#running-tests)
+- [Time and space complexity](#time-and-space-complexity)
+- [Test data](#test-data)
+- [Development and contributing](#development-and-contributing)
+- [Publication](#publication)
+- [Acknowledgements](#acknowledgements) -->
+
+
+## Overview
+
+### About Python memory usage
 
 Python is a great programming language (*fight me*), but sometimes you start
 questioning why it does things in certain ways. Since Python 2.3, the standard
@@ -57,7 +78,7 @@ sad when you are used to [Rust](https://www.rust-lang.org/), where most
 
 *Actually, that's a lie, but keep reading*.
 
-## Example: Where we build a directed graph
+### Simple example usecase
 
 Let's imagine we are building an ordered graph data structure, where we may
 want to store [taxonomic data](https://en.wikipedia.org/wiki/Taxonomic_database),
@@ -107,7 +128,7 @@ According to these, we are going to have **1,130,671** leaves for a total of
 Well, glad we are on the same level: this is what **`nanoset`** does for you!
 
 
-## Implementation: Where the magic happens
+### Implementation
 
 Actually, it's not magic at all. Just imagine a class `NanoSet` that works as
 a [proxy](https://www.tutorialspoint.com/python_design_patterns/python_design_patterns_proxy.htm)
@@ -198,7 +219,7 @@ This will cause `PicoSet` to be used instead of `NanoSet` when running Python
 with the `-O` flag.
 
 
-## Statistics: Where I convice you to use this
+### Statistics
 
 Okay, so let's do some maths. With `S = 232` the size of an allocated set,
 `s` the size of the wrapper (`56` for `NanoSet`, `24` for `PicoSet`), the
@@ -221,9 +242,9 @@ can reduce this to **188.0 MiB**, or even to **139.3 MiB** with `PicoSet`!
 **We just saved about 50% memory just by using `NanoSet` in place of `set`.**
 
 
-## Installing: Where you add this to your project dependencies
+## Installing
 
-This module is implemented in Rust, but native Python [wheels](https://pythonwheels.com/)
+This module is implemented in Rust, but native [Python wheels](https://pythonwheels.com/)
 are compiled for the following platforms:
 
 * Windows x86-64: CPython 3.5, 3.6, 3.7
@@ -235,9 +256,19 @@ If you platform is not among these, you will need a
 as well as the [`setuptools-rust`](https://pypi.org/project/setuptools-rust/)
 library installed to build the extension module.
 
+Then, simply install with `pip`:
+```console
+$ pip install --user nanoset
+```
 
-## Licensing: Where realize you can use this anywhere
+## API Reference
 
-This library is provided under the open-source
-[MIT license](https://choosealicense.com/licenses/mit/), which lets you do
-a lot of things freely as long as you give proper credit.
+Well, this is a comprehensive wrapper for `set`, so you can just read the
+[standard library documentation](https://docs.python.org/3.7/library/stdtypes.html#set-types-set-frozenset). Except for some very particular edge-cases, `NanoSet` and `PicoSet` both pass the
+[`set` test suite](https://github.com/python/cpython/blob/master/Lib/test/test_set.py)
+of [CPython](https://github.com/python/cpython).
+
+
+## License
+
+This library is provided under the open-source [MIT license](https://choosealicense.com/licenses/mit/).
