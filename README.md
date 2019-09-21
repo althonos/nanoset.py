@@ -41,7 +41,7 @@ from nanoset import PicoSet as set
 - [Acknowledgements](#acknowledgements) -->
 
 
-## 🏞️ Overview
+## 🗺️ Overview
 
 ### 🐏 About Python memory usage
 

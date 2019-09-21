@@ -75,18 +75,13 @@ jobs:
     #   <<: *test-python-osx
 
 deploy:
-  - provider: script
-    script: ci/travis/deploy.sh
-    skip_cleanup: true
-    on:
-      tags: true
-      branch: master
-      repo: althonos/nanoset.py
-  - provider: cargo
-    on:
-      tags: true
-      branch: master
-      repo: althonos/nanoset.py
+  provider: script
+  script: ci/travis/deploy.sh
+  skip_cleanup: true
+  on:
+    tags: true
+    branch: master
+    repo: althonos/nanoset.py
 
 notifications:
   email:

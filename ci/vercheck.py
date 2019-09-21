@@ -28,7 +28,7 @@ if ci_version is None:
     raise RuntimeError("could not find release tag")
 
 # Check all versions are the same (duh)
-if not py_version == rs_version == ci_version:
+if not py_version == rs_version == ci_version.lstrip('v'):
     raise RuntimeError(textwrap.dedent(
             """versions differ:
             - setup.cfg:  {}
