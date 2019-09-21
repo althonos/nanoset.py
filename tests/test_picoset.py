@@ -624,7 +624,7 @@ class TestSet(TestJointOps, unittest.TestCase):
         t ^= t
         self.assertEqual(t, self.thetype())
 
-    @unittest.skip(f'cannot weakref {set.__name__} instances')
+    @unittest.skip('cannot weakref {} instances'.format(set.__name__))
     def test_weakref(self):
         s = self.thetype('gallahad')
         p = weakref.proxy(s)
