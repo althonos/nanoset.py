@@ -28,6 +28,7 @@ test_script:
 
 before_deploy:
 - python setup.py bdist_wheel
+- python ci/vercheck.py
 
 deploy_script:
 - ps: .\ci\appveyor\deploy.ps1

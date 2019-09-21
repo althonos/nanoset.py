@@ -31,6 +31,8 @@ stages:
     - ci/travis/manylinux/script.sh
   after_success:
     - ci/travis/manylinux/after_success.sh
+  before_deploy:
+    - ci/travis/manylinux/before_deploy.sh
 
 .test-python-osx: &test-python-osx
   stage: osx
@@ -50,6 +52,8 @@ stages:
     - ci/travis/osx/before_cache.sh
   after_success:
     - ci/travis/osx/after_success.sh
+  before_deploy:
+    - ci/travis/osx/before_deploy.sh
 
 jobs:
   include:
@@ -71,13 +75,18 @@ jobs:
     #   <<: *test-python-osx
 
 deploy:
-  provider: script
-  script: ci/travis/deploy.sh
-  skip_cleanup: true
-  on:
-    tags: true
-    branch: master
-    repo: althonos/nanoset.py
+  - provider: script
+    script: ci/travis/deploy.sh
+    skip_cleanup: true
+    on:
+      tags: true
+      branch: master
+      repo: althonos/nanoset.py
+  - provider: cargo
+    on:
+      tags: true
+      branch: master
+      repo: althonos/nanoset.py
 
 notifications:
   email:

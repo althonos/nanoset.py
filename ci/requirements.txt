@@ -2,3 +2,6 @@ setuptools
 setuptools-rust
 wheel
 twine
+packaging
+semantic_version
+toml

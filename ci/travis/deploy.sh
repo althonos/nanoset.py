@@ -17,3 +17,8 @@ chandler push --github="$TRAVIS_REPO_SLUG" --changelog="CHANGELOG.md"
 
 log Deploying to PyPI
 python3 -m twine upload --skip-existing dist/*.whl dist/*.tar.gz
+
+# --- Deploy to crates.io ----------------------------------------------------
+
+log Deploying to \`crates.io\`
+cargo publish --token $CRATES_IO_TOKEN

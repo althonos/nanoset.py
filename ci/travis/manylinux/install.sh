@@ -5,7 +5,7 @@
 
 # --- Install Rust -----------------------------------------------------------
 
-log Installing Rust nightly
+log Installing Rust nightly in \`manylinux\` container
 docker exec -it manylinux sh -c \
   'curl -sSf https://build.travis-ci.org/files/rustup-init.sh | sh -s -- --default-toolchain=nightly -y'
 
