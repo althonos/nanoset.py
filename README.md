@@ -7,6 +7,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square&maxAge=2678400)](https://choosealicense.com/licenses/mit/)
 [![Source](https://img.shields.io/badge/source-GitHub-303030.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/nanoset.py/)
 [![PyPI](https://img.shields.io/pypi/v/nanoset.svg?style=flat-square&maxAge=600)](https://pypi.org/project/nanoset)
+[![Crates](https://img.shields.io/crates/v/nanoset-py?style=flat-square&maxAge=600)](https://crates.io/crates/nanoset-py)
 [![Wheel](https://img.shields.io/pypi/wheel/nanoset.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/nanoset/#files)
 [![Python Versions](https://img.shields.io/pypi/pyversions/nanoset.svg?style=flat-square&maxAge=600)](https://pypi.org/project/nanoset/#files)
 [![Python Implementations](https://img.shields.io/pypi/implementation/nanoset.svg?style=flat-square&maxAge=600)](https://pypi.org/project/nanoset/#files)
@@ -256,10 +257,17 @@ $ pip install --user nanoset
 ## 📖 API Reference
 
 Well, this is a comprehensive wrapper for `set`, so you can just read the
-[standard library documentation](https://docs.python.org/3.7/library/stdtypes.html#set-types-set-frozenset). Except for some very particular edge-cases, `NanoSet` and `PicoSet` both pass the
+[standard library documentation](https://docs.python.org/3.7/library/stdtypes.html#set-types-set-frozenset).
+Except for some very particular edge-cases, `NanoSet` and `PicoSet` both pass the
 [`set` test suite](https://github.com/python/cpython/blob/master/Lib/test/test_set.py)
 of [CPython](https://github.com/python/cpython).
 
+There are however things you *can't* do:
+- Subclassing a `PicoSet` or a `NanoSet`.
+- Weakrefing a `PicoSet` or a `NanoSet`.
+- Checking for membership in a plain `set` or `frozenset` with implicit
+  conversion to `frozenset`.
+- Creating a `dict` from a `PicoSet` or a `NanoSet` without rehashing keys.
 
 ## 📜 License
 
