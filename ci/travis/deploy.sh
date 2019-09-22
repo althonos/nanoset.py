@@ -20,7 +20,7 @@ python3 -m twine upload --skip-existing dist/*.whl dist/*.tar.gz
 
 # --- Deploy to crates.io ----------------------------------------------------
 
-if [ "$TRAVIS_PYTHON_VERSION" = "3.7"]; then
+if [ "$TRAVIS_PYTHON_VERSION" = "3.7" ]; then
   log Deploying to \`crates.io\`
   cargo publish --token $CRATES_IO_TOKEN
 fi

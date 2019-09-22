@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.1.1...HEAD
+
+
+## [v0.1.1] - 2019-09-22
+
+[v0.1.1]: https://github.com/althonos/nanoset.py/compare/v0.1.0...v0.1.1
+
+### Fixed
+- Compilation of Rust crate when not building a Python extension module.
+- Project metadata for PyPI and `crates.io`.
+- OSX deployment scripts not deploying built wheels successfully.
+
+### Added
+- `pyproject.toml` file to source distribution.
 
 
 ## [v0.1.0] - 2019-09-21

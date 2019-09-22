@@ -1,6 +1,6 @@
 [package]
 name = "nanoset-py"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Martin Larralde <martin.larralde@embl.de>"]
 edition = "2018"
 license = "MIT"
@@ -28,7 +28,10 @@ built = "0.3.1"
 
 [dependencies]
 pyo3 = "0.8.0"
-pyo3-built = "0.3.0"
+[dependencies.pyo3-built]
+version = "0.3.0"
+optional = true
 
 [features]
-extension-module = ["pyo3/extension-module"]
+default = []
+extension-module = ["pyo3/extension-module", "pyo3-built"]

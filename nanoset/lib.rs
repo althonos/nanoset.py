@@ -4,9 +4,9 @@
 
 extern crate pyo3;
 
-#![cfg(feature = "extension-module")]
+#[cfg(feature = "extension-module")]
 extern crate pyo3_built;
-#![cfg(feature = "extension-module")]
+#[cfg(feature = "extension-module")]
 mod built;
 
 use std::ops::Deref;

@@ -33,7 +33,7 @@ from nanoset import PicoSet as set
 - [License](#-license)
 
 
-## 🗺️  Overview
+## 🗺️ Overview
 
 ### 🐏 About Python memory usage
 
