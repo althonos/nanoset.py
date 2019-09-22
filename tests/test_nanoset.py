@@ -205,7 +205,6 @@ class TestJointOps():
         else:
             self.fail("s^t did not screen-out general iterables")
 
-    @unittest.expectedFailure
     def test_equality(self):
         self.assertEqual(self.s, set(self.word))
         self.assertEqual(self.s, frozenset(self.word))

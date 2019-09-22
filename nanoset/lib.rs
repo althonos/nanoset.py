@@ -560,9 +560,25 @@ macro_rules! common_impl {
                             Ge => l.call_method1(py, "__ge__", (obj,)),
                         },
                     }
-                } else if let Ok(_other) = obj.cast_as::<PyFrozenSet>() {
-                    // unimplemented!(concat!(stringify!($cls), ".__cmp__(frozenset)"));
-                    Ok(py.NotImplemented())
+                } else if let Ok(other) = obj.cast_as::<PyFrozenSet>() {
+                    match (&self.inner, other.is_empty()) {
+                        (None, true) => match op {
+                            Eq | Le | Ge => Ok(true.to_object(py)),
+                            Ne | Lt | Gt => Ok(false.to_object(py)),
+                        },
+                        (None, false) => match op {
+                            Eq | Gt | Ge => Ok(false.to_object(py)),
+                            Ne | Lt | Le => Ok(true.to_object(py)),
+                        },
+                        (Some(l), _) => match op {
+                            Eq => l.call_method1(py, "__eq__", (obj,)),
+                            Ne => l.call_method1(py, "__ne__", (obj,)),
+                            Lt => l.call_method1(py, "__lt__", (obj,)),
+                            Le => l.call_method1(py, "__le__", (obj,)),
+                            Gt => l.call_method1(py, "__gt__", (obj,)),
+                            Ge => l.call_method1(py, "__ge__", (obj,)),
+                        },
+                    }
                 } else {
                     match op {
                         CompareOp::Eq => Ok(false.to_object(py)),
