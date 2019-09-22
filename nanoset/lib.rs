@@ -3,8 +3,10 @@
 #![cfg_attr(feature = "extension-module", crate_type = "cdylib")]
 
 extern crate pyo3;
-extern crate pyo3_built;
 
+#![cfg(feature = "extension-module")]
+extern crate pyo3_built;
+#![cfg(feature = "extension-module")]
 mod built;
 
 use std::ops::Deref;
