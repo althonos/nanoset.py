@@ -22,10 +22,12 @@ use pyo3::gc::PyTraverseError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
+use pyo3::types::PyDict;
 use pyo3::types::PyFrozenSet;
 use pyo3::types::PyIterator;
 use pyo3::types::PySet;
 use pyo3::types::PyTuple;
+use pyo3::AsPyPointer;
 use pyo3::PyNativeType;
 
 // --- Common implementation -------------------------------------------------
@@ -51,6 +53,15 @@ macro_rules! common_impl {
                         Ok(Self::new())
                     } else {
                         s.to_object(py).call_method0(py, "copy").map(Self::from_set)
+                    }
+                } else if let Ok(d) = obj.cast_as::<PyDict>(py) {
+                    if d.is_empty() {
+                        Ok(Self::new())
+                    } else {
+                        unsafe {
+                            let set = pyo3::ffi::PySet_New(d.as_ptr());
+                            Ok(Self::from_set(PyObject::from_owned_ptr(py, set)))
+                        }
                     }
                 } else {
                     let iterator = PyIterator::from_object(py, &obj)?;
