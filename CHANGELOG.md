@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.1.2...HEAD
+
+
+## [v0.1.2] - 2019-09-23
+
+[v0.1.2]: https://github.com/althonos/nanoset.py/compare/v0.1.1...v0.1.2
+
+### Added
+- Special case to create a `NanoSet` from a `dict` without rehashing.
+- Implementation of equality check from `NanoSet` to `frozenset`.
 
 
 ## [v0.1.1] - 2019-09-22
