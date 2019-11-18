@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.1.3...HEAD
+
+
+## [v0.1.3] - 2019-11-18
+
+[v0.1.2]: https://github.com/althonos/nanoset.py/compare/v0.1.2...v0.1.3
+
+### Added
+- Compilation of Python 3.8 wheels for Linux and Windows
+  ([#1](https://github.com/althonos/nanoset.py/issues/1)).
 
 
 ## [v0.1.2] - 2019-09-23

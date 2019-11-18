@@ -195,7 +195,7 @@ Partition of a set of 2034285 objects. Total size = 300668995 bytes.
 ```
 
 On the second run, we have about the same order of allocated memory, saving
-**28 MB** (**28** bytes saved by switched from `NanoSet` to `PicoSet` times
+**28 MB** (**28** bytes saved by switching from `NanoSet` to `PicoSet` times
 **1,000,000** instances). However, the garbage collector has no idea where
 some of the memory is, because `PicoSet` hides the sets it allocates (this is
 fine: it will be deallocated along with the `PicoSet`).
@@ -240,8 +240,8 @@ can reduce this to **188.0 MiB**, or even to **139.3 MiB** with `PicoSet`!
 This module is implemented in Rust, but native [Python wheels](https://pythonwheels.com/)
 are compiled for the following platforms:
 
-* Windows x86-64: CPython 3.5, 3.6, 3.7
-* Linux x86-64: CPython 3.5, 3.6, 3.7
+* Windows x86-64: CPython 3.5, 3.6, 3.7, 3.8
+* Linux x86-64: CPython 3.5, 3.6, 3.7, 3.8
 * OSX x86-64: CPython 3.6, 3.7
 
 If you platform is not among these, you will need a
