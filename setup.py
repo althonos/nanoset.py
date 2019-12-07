@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import configparser
-import os
 
 import setuptools
 import setuptools_rust as rust
