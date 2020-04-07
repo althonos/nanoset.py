@@ -1,11 +1,11 @@
-sudo: false
 dist: xenial
 
 env:
   global:
     - RUST_BACKTRACE=1
-    - PATH="$HOME/.cargo/bin:$PATH"
+    - PATH="$PYENV_ROOT/bin:$HOME/.cargo/bin:$PATH"
     - PYTHON_SYS_EXECUTABLE="python3"
+    - PYENV_ROOT="$HOME/.pyenv"
 
 git:
   depth: false
@@ -52,8 +52,6 @@ stages:
     - ci/travis/osx/before_cache.sh
   after_success:
     - ci/travis/osx/after_success.sh
-  before_deploy:
-    - ci/travis/osx/before_deploy.sh
 
 jobs:
   include:
@@ -66,17 +64,18 @@ jobs:
       <<: *test-python
     - python: 3.8
       <<: *test-python
-    # - python: pypy3
-    #   <<: *test-python
     # OSX
+    - env: PYTHON=python3.5
+      if: tag IS present
+      <<: *test-python-osx
     - env: PYTHON=python3.6
-      osx_image: xcode9.4
+      if: tag IS present
       <<: *test-python-osx
     - env: PYTHON=python3.7
-      osx_image: xcode10.2
+      if: tag IS present
       <<: *test-python-osx
-    # - env: PYTHON=pypy3
-    #   <<: *test-python-osx
+    - env: PYTHON=python3.8
+      <<: *test-python-osx
 
 deploy:
   provider: script
