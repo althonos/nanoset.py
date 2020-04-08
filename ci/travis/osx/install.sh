@@ -53,7 +53,7 @@ curl -sSf https://build.travis-ci.org/files/rustup-init.sh | sh -s -- --default-
 # --- Install Python requirements --------------------------------------------
 
 log Installing Python requirements
-$PYTHON -m pip install -r "$TRAVIS_BUILD_DIR/ci/requirements.txt"
+$PYTHON -m pip install -U -r "$TRAVIS_BUILD_DIR/ci/requirements.txt"
 
 
 # --- Setup cargo-cache ------------------------------------------------------

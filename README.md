@@ -242,7 +242,7 @@ are compiled for the following platforms:
 
 * Windows x86-64: CPython 3.5, 3.6, 3.7, 3.8
 * Linux x86-64: CPython 3.5, 3.6, 3.7, 3.8
-* OSX x86-64: CPython 3.6, 3.7
+* OSX x86-64: CPython 3.5, 3.6, 3.7, 3.8
 
 If you platform is not among these, you will need a
 [working Rust `nightly` toolchain](https://www.rust-lang.org/tools/install)

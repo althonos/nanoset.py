@@ -15,6 +15,12 @@ chandler push --github="$TRAVIS_REPO_SLUG" --changelog="CHANGELOG.md"
 
 # --- Deploy to PyPI ---------------------------------------------------------
 
+if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+  log Activating pyenv
+  eval "$(pyenv init -)"
+  pyenv shell $(pyenv versions --bare)
+fi
+
 log Deploying to PyPI
 python3 -m twine upload --skip-existing dist/*.whl dist/*.tar.gz
 
