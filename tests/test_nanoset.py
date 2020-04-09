@@ -18,7 +18,10 @@ try:
 except ImportError:
     support = None
 
+import nanoset
+from semantic_version import Version
 from nanoset import NanoSet as set
+pyo3_version = Version(nanoset.__build__['dependencies']['pyo3'])
 
 
 class PassThru(Exception):
@@ -128,6 +131,7 @@ class TestJointOps():
         else:
             self.assertNotEqual(id(s), id(z))
 
+    @unittest.skipIf(pyo3_version <= Version("0.9.2"), "panics in older pyo3 versions")
     def test_isdisjoint(self):
         def f(s1, s2):
             'Pure python equivalent of isdisjoint()'

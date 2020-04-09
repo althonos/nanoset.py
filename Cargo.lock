@@ -289,7 +289,7 @@ name = "nanoset-py"
 version = "0.1.3"
 dependencies = [
  "built 0.3.2",
- "pyo3",
+ "pyo3 0.9.1 (git+https://github.com/pyo3/pyo3)",
  "pyo3-built",
 ]
 
@@ -403,6 +403,25 @@ dependencies = [
 [[package]]
 name = "pyo3"
 version = "0.9.1"
+source = "git+https://github.com/pyo3/pyo3#53b63cddc2a1d71dec70ae4729c9f00e52e7f6fc"
+dependencies = [
+ "indoc",
+ "inventory",
+ "libc",
+ "num-traits",
+ "parking_lot",
+ "paste",
+ "pyo3cls 0.9.1 (git+https://github.com/pyo3/pyo3)",
+ "regex",
+ "serde",
+ "serde_json",
+ "unindent",
+ "version_check",
+]
+
+[[package]]
+name = "pyo3"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "397fef05d982d84944edac8281972ed7108be996e5635fdfdae777d78632c8f0"
 dependencies = [
@@ -412,7 +431,7 @@ dependencies = [
  "num-traits",
  "parking_lot",
  "paste",
- "pyo3cls",
+ "pyo3cls 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex",
  "serde",
  "serde_json",
@@ -427,7 +446,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ade6b5a0ff6ddc5e8eef8b07485125d11b74503bdc5c3afcedefdfafd14ed62d"
 dependencies = [
  "built 0.4.0",
- "pyo3",
+ "pyo3 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pyo3-derive-backend"
+version = "0.9.1"
+source = "git+https://github.com/pyo3/pyo3#53b63cddc2a1d71dec70ae4729c9f00e52e7f6fc"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -444,10 +473,20 @@ dependencies = [
 [[package]]
 name = "pyo3cls"
 version = "0.9.1"
+source = "git+https://github.com/pyo3/pyo3#53b63cddc2a1d71dec70ae4729c9f00e52e7f6fc"
+dependencies = [
+ "pyo3-derive-backend 0.9.1 (git+https://github.com/pyo3/pyo3)",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pyo3cls"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab91823d2634de5fd56af40da20fd89cac144a15da0d9101f3c2b047af9ed9ca"
 dependencies = [
- "pyo3-derive-backend",
+ "pyo3-derive-backend 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote",
  "syn",
 ]
