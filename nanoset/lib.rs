@@ -735,6 +735,17 @@ pub fn init(py: Python, m: &PyModule) -> PyResult<()> {
         "register",
         (<PicoSet as pyo3::type_object::PyTypeObject>::type_object(),),
     )?;
+    let mutset = cabc.get("MutableSet")?.to_object(py);
+    mutset.call_method1(
+        py,
+        "register",
+        (<NanoSet as pyo3::type_object::PyTypeObject>::type_object(),),
+    )?;
+    mutset.call_method1(
+        py,
+        "register",
+        (<PicoSet as pyo3::type_object::PyTypeObject>::type_object(),),
+    )?;
 
     Ok(())
 }
