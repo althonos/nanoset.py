@@ -14,6 +14,7 @@ build = "nanoset/build.rs"
 
 [lib]
 path = "nanoset/lib.rs"
+crate_type = ["cdylib", "rlib"]
 
 [badges.travis-ci]
 repository = "althonos/nanoset.py"
