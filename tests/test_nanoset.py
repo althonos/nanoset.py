@@ -5,6 +5,7 @@ import collections
 import collections.abc
 import copy
 import gc
+import io
 import itertools
 import operator
 import pickle
@@ -14,15 +15,15 @@ import warnings
 import weakref
 from random import randrange, shuffle
 
+try:
+    from . import support
+except ImportError:
+    support = None
+
 import nanoset
 from semantic_version import Version
 from nanoset import NanoSet as set
 pyo3_version = Version(nanoset.__build__['dependencies']['pyo3'])
-
-try:
-    from test import support
-except ImportError:
-    from . import support
 
 
 class PassThru(Exception):
@@ -337,15 +338,9 @@ class TestJointOps():
         w = ReprWrapper()
         s = self.thetype([w])
         w.value = s
-        fo = open(support.TESTFN, "w")
-        try:
+        with io.StringIO() as fo:
             fo.write(str(s))
-            fo.close()
-            fo = open(support.TESTFN, "r")
-            self.assertEqual(fo.read(), repr(s))
-        finally:
-            fo.close()
-            support.unlink(support.TESTFN)
+            self.assertEqual(fo.getvalue(), repr(s))
 
     @unittest.expectedFailure
     def test_do_not_rehash_dict_keys(self):
@@ -379,6 +374,7 @@ class TestJointOps():
         gc.collect()
         self.assertTrue(ref() is None, "Cycle was not collected")
 
+    @unittest.skipUnless(support, "could not import `test.support`")
     @unittest.expectedFailure
     def test_free_after_iterating(self):
         support.check_free_after_iterating(self, iter, self.thetype)
@@ -699,15 +695,9 @@ class TestBasicOps:
         self.assertEqual(result, sorted_repr_values)
 
     def test_print(self):
-        try:
-            fo = open(support.TESTFN, "w")
+        with io.StringIO() as fo:
             fo.write(str(self.set))
-            fo.close()
-            fo = open(support.TESTFN, "r")
-            self.assertEqual(fo.read(), repr(self.set))
-        finally:
-            fo.close()
-            support.unlink(support.TESTFN)
+            self.assertEqual(fo.getvalue(), repr(self.set))
 
     def test_length(self):
         self.assertEqual(len(self.set), self.length)
@@ -881,6 +871,7 @@ class TestBasicOpsBytes(TestBasicOps, unittest.TestCase):
 
 #------------------------------------------------------------------------------
 
+@unittest.skipUnless(support, "could not import `test.support`")
 class TestBasicOpsMixedStringBytes(TestBasicOps, unittest.TestCase):
     def setUp(self):
         self._warning_filters = support.check_warnings()
@@ -1801,4 +1792,4 @@ class TestGraphs(unittest.TestCase):
 #==============================================================================
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(exit=False)

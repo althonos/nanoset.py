@@ -31,6 +31,9 @@ version = "0.9.2"
 [dependencies.pyo3-built]
 version = "0.4.0"
 
+[dev-dependencies.lazy_static]
+version = "1.4.0"
+
 [features]
 default = []
 extension-module = ["pyo3/extension-module"]
