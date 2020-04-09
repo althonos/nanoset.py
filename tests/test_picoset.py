@@ -14,12 +14,12 @@ import warnings
 import weakref
 from random import randrange, shuffle
 
+from nanoset import PicoSet as set
+
 try:
     from test import support
 except ImportError:
-    support = None
-
-from nanoset import PicoSet as set
+    from . import support
 
 
 class PassThru(Exception):
@@ -329,7 +329,6 @@ class TestJointOps():
             name = repr(s).partition('(')[0]    # strip class name
             self.assertEqual(repr(s), '%s({%s(...)})' % (name, name))
 
-    @unittest.skipUnless(support, "could not import `test.support`")
     def test_cyclical_print(self):
         w = ReprWrapper()
         s = self.thetype([w])
@@ -377,7 +376,6 @@ class TestJointOps():
         self.assertTrue(ref() is None, "Cycle was not collected")
 
     @unittest.expectedFailure
-    @unittest.skipUnless(support, "could not import `test.support`")
     def test_free_after_iterating(self):
         support.check_free_after_iterating(self, iter, self.thetype)
 
@@ -696,7 +694,6 @@ class TestBasicOps:
         sorted_repr_values.sort()
         self.assertEqual(result, sorted_repr_values)
 
-    @unittest.skipUnless(support, "could not import `test.support`")
     def test_print(self):
         try:
             fo = open(support.TESTFN, "w")
@@ -880,7 +877,6 @@ class TestBasicOpsBytes(TestBasicOps, unittest.TestCase):
 
 #------------------------------------------------------------------------------
 
-@unittest.skipUnless(support, "could not import `test.support`")
 class TestBasicOpsMixedStringBytes(TestBasicOps, unittest.TestCase):
     def setUp(self):
         self._warning_filters = support.check_warnings()
