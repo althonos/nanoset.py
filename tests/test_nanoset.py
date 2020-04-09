@@ -8,6 +8,7 @@ import gc
 import itertools
 import operator
 import pickle
+import sys
 import unittest
 import warnings
 import weakref
@@ -792,6 +793,7 @@ class TestBasicOps:
             self.assertEqual(self.set, copy,
                              "%s != %s" % (self.set, copy))
 
+    @unittest.skipIf(sys.version_info < (3,7), "only fixed in Python 3.7+")
     def test_issue_37219(self):
         with self.assertRaises(TypeError):
             set().difference(123)
