@@ -11,3 +11,4 @@ pyenv shell $(pyenv versions --bare)
 # --- Test -------------------------------------------------------------------
 
 $PYTHON setup.py test
+

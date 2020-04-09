@@ -67,3 +67,4 @@ if [ "$LATEST" != "$LOCAL" ]; then
 else
         log Using cached cargo-cache v$LOCAL
 fi
+
