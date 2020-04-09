@@ -13,7 +13,6 @@ categories = ["data-structures", "api-bindings"]
 build = "nanoset/build.rs"
 
 [lib]
-crate-type = ["cdylib"]
 path = "nanoset/lib.rs"
 
 [badges.travis-ci]
@@ -23,15 +22,14 @@ repository = "althonos/nanoset.py"
 [badges.maintenance]
 status     = "passively-maintained"
 
-[build-dependencies]
-built = "0.3.1"
+[build-dependencies.built]
+version = "0.3.1"
 
 [dependencies.pyo3]
 version = "0.9.2"
 [dependencies.pyo3-built]
 version = "0.4.0"
-optional = true
 
 [features]
 default = []
-extension-module = ["pyo3/extension-module", "pyo3-built"]
+extension-module = ["pyo3/extension-module"]

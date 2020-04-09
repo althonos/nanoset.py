@@ -96,19 +96,21 @@ of the [NCBITaxon](https://www.ncbi.nlm.nih.gov/taxonomy) project, the
 database for Organismal Classification developed by the US National Center for
 Biotechnology Information:
 
-     Metrics
-        Number of classes*: 1595237              
-        Number of individuals: 0
-        Number of properties: 0
-        Classes without definition: 1595237
-        Classes without label: 0
-        Average number of children: 12
-        Classes with a single child: 40319
-        Maximum number of children: 41761
-        Classes with more than 25 children: 0
-        Classes with more than 1 parent: 0
-        Maximum depth: 38
-        Number of leaves**: 1130671
+```ignore
+ Metrics
+    Number of classes*: 1595237
+    Number of individuals: 0
+    Number of properties: 0
+    Classes without definition: 1595237
+    Classes without label: 0
+    Average number of children: 12
+    Classes with a single child: 40319
+    Maximum number of children: 41761
+    Classes with more than 25 children: 0
+    Classes with more than 1 parent: 0
+    Maximum depth: 38
+    Number of leaves**: 1130671
+```
 
 According to these, we are going to have **1,130,671** leaves for a total of
 **1,595,237** nodes, which means **70.8%** of empty sets. Now you may think:

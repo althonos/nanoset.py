@@ -3,10 +3,8 @@
 #![cfg_attr(feature = "extension-module", crate_type = "cdylib")]
 
 extern crate pyo3;
-
-#[cfg(feature = "extension-module")]
 extern crate pyo3_built;
-#[cfg(feature = "extension-module")]
+
 mod built;
 
 use pyo3::class::basic::CompareOp;
@@ -717,14 +715,13 @@ common_impl!(PicoSet);
 
 // ---------------------------------------------------------------------------
 
-#[cfg(feature = "extension-module")]
-#[pymodule]
-fn nanoset(py: Python, m: &PyModule) -> PyResult<()> {
+#[cfg_attr(feature = "extension-module", pymodule(nanoset))]
+pub fn init(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<NanoSet>()?;
     m.add_class::<PicoSet>()?;
-    m.add("__build__", pyo3_built::pyo3_built!(py, built))?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add("__author__", env!("CARGO_PKG_AUTHORS").replace(':', "\n"))?;
+    m.add("__build__", pyo3_built::pyo3_built!(py, built))?;
 
     let cabc = py.import("collections.abc")?;
     let set = cabc.get("Set")?.to_object(py);
