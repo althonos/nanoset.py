@@ -50,9 +50,9 @@ useful for some algorithms. However, **sets are memory-expensive**:
 ```python
 >>> import sys
 >>> sys.getsizeof(list())
-72
+56
 >>> sys.getsizeof(set())
-232
+216
 ```
 
 An empty set takes more than three times the memory of an empty list! For some
@@ -64,9 +64,9 @@ sad when you are used to [Rust](https://www.rust-lang.org/), where most
 ```python
 >>> import nanoset
 >>> sys.getsizeof(nanoset.NanoSet())
-56
+48
 >>> sys.getsizeof(nanoset.PicoSet())
-24
+32
 ```
 
 *Actually, that's a lie, but keep reading*.
@@ -89,7 +89,7 @@ class Node:
 
 This makes adding an edge and querying for an edge existence between two nodes
 an `O(1)` operation, and iterating over all the nodes an `O(n)` operation, which
-is mot likely what we want here. We use `set` an dnot `list` because we want to
+is mot likely what we want here. We use `set` and not `list` because we want to
 avoid storing an edge in duplicate, which is a sensible choice. But now let's
 look at the [statistics](https://terminologies.gfbio.org/terminology/?ontology=NCBITAXON)
 of the [NCBITaxon](https://www.ncbi.nlm.nih.gov/taxonomy) project, the
@@ -143,14 +143,14 @@ class NanoSet(collections.abc.Set):
 ```
 
 That's about it! However, doing it like so in Python would not be super
-efficient, as the resulting object would be **64** bytes. Using
+efficient, as the resulting object would be **48** bytes. Using
 [slots](http://book.pythontips.com/en/latest/__slots__magic.html), this can be
-reduced to **56** bytes, which is on par to what we get with **`NanoSet`**.
+reduced to **40** bytes, which is on par to what we get with **`NanoSet`**.
 
 **Note that these values are only when the inner set is empty!** When actually
 allocating the set to store our values, we allocate an additional **232** bytes
 of data. This means that using **`NanoSet`** creates an overhead, since a
-non-empty set will now weigh **288** bytes (**256** bytes for **`PicoSet`**).
+non-empty set will now weigh **264** bytes (**248** bytes for **`PicoSet`**).
 
 > Well, I was way better off with my approach of storing `Optional[Set]`
 > everywhere then, I don't want to pay any additional cost for nonempty sets!
@@ -159,14 +159,14 @@ Sure. But that would mean changing your whole code. And actually, you may not
 gain that much memory from doing that compared to using `nanoset`, since the
 only time the wrapper performs badly is when you have a load factor of more than
 90%. Furthermore, just to give you some perspective, `sys.getsizeof(1)` is
-**24** bytes as well.
+**28** bytes.
 
 > By the way, you didn't mention `PicoSet`. How did you manage to get that down
-> to **24** bytes, when a slotted Python object can't be less that **56** bytes?
+> to **32** bytes, when a slotted Python object can't be less that **40** bytes?
 
 Easy: `PicoSet` is basically `NanoSet`, but without an implementation of the
 [Garbage Collector protocol](https://docs.python.org/3/c-api/gcsupport.html).
-This saves us **32** bytes of object memory, but comes with a drawback: the
+This saves us **8** bytes of object memory, but comes with a drawback: the
 garbage collector cannot see the set allocated *inside* the `PicoSet`. This
 does not change anything for execution, but debugging with a memory profiler
 will be harder. Here is an example where we allocate **1,000,000** singletons
@@ -176,26 +176,26 @@ first with `NanoSet`, then with `PicoSet`, using
 ```python
 >>> l = [nanoset.NanoSet({x}) for x in range(1000000)]
 >>> guppy.hpy().heap()
-Partition of a set of 3034170 objects. Total size = 328667393 bytes.
+Partition of a set of 3036763 objects. Total size = 304996526 bytes.
  Index  Count   %     Size    %   Cumulative %  Kind (class / dict of class)
-     0 1000041  33 232100648  71  232100648  71 set
-     1 1000000  33  56000000  17  288100648  88 nanoset.NanoSet
+     0 1000044  33 216105248  71  216105248  71 set
+     1 1000000  33  48000000  16  264105248  87 nanoset.NanoSet
      ...
-     3      96   0  8712752    3 324838712  99 list
+     3     113   0   8716880   3  300851404  99 list
      ...
 ```
 ```python
 >>> l = [nanoset.PicoSet({x}) for x in range(1000000)]
 >>> guppy.hpy().heap()
-Partition of a set of 2034285 objects. Total size = 300668995 bytes.
+Partition of a set of 1036905 objects. Total size = 44998965 bytes.
  Index  Count   %     Size   %   Cumulative  %  Kind (class / dict of class)
-     0 1000000  97 24000000  65  24000000    65 nanoset.PicoSet
-     1     96    0  8712752  24  32712752    89 list
+     0 1000000  96 32000000  71   32000000   71 nanoset.PicoSet
+     1      96   0  8712752  24   32712752   89 list
      ...
 ```
 
 On the second run, we have about the same order of allocated memory, saving
-**28 MB** (**28** bytes saved by switching from `NanoSet` to `PicoSet` times
+**16 MB** (**16** bytes saved by switching from `NanoSet` to `PicoSet` times
 **1,000,000** instances). However, the garbage collector has no idea where
 some of the memory is, because `PicoSet` hides the sets it allocates (this is
 fine: it will be deallocated along with the `PicoSet`).
@@ -215,7 +215,7 @@ with the `-O` flag.
 ### 📈 Statistics
 
 Okay, so let's do some maths. With `S = 232` the size of an allocated set,
-`s` the size of the wrapper (`56` for `NanoSet`, `24` for `PicoSet`), the
+`s` the size of the wrapper (`48` for `NanoSet`, `32` for `PicoSet`), the
 `x` percentage of nonempty sets in our data structure, the relative size
 of our sets is:
 
@@ -229,10 +229,10 @@ depending of the ratio of empty sets you have at runtime:
 
 If we get back to our NCBITaxon example, we have a total of **1,595,237** nodes
 and **1,130,671** leaves, which means that by using sets we are allocating
-**1,595,237 * 232 = 353.0 MiB** of memory simply for `set` after the whole
+**1,595,237 * 232 = 328.6 MiB** of memory simply for `set` after the whole
 taxonomy is loaded. If we use `NanoSet` however, we
-can reduce this to **188.0 MiB**, or even to **139.3 MiB** with `PicoSet`!
-**We just saved about 50% memory just by using `NanoSet` in place of `set`.**
+can reduce this to **168.7 MiB**, or even to **144.4 MiB** with `PicoSet`!
+**We just saved about 45% memory just by using `NanoSet` in place of `set`.**
 
 
 ## 🔧 Installing
