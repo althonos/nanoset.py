@@ -11,11 +11,12 @@ git:
   depth: false
 
 stages:
-  - name: linux
-  - name: osx
+  - name: Test (Linux)
+  - name: Test (OSX)
+  - name: Coverage
 
 .test-python: &test-python
-  stage: linux
+  stage: Test (Linux)
   language: python
   cache:
     directories:
@@ -35,7 +36,7 @@ stages:
     - ci/travis/manylinux/before_deploy.sh
 
 .test-python-osx: &test-python-osx
-  stage: osx
+  stage: Test (OSX)
   os: osx
   language: generic
   cache:
@@ -52,6 +53,22 @@ stages:
     - ci/travis/osx/before_cache.sh
   after_success:
     - ci/travis/osx/after_success.sh
+
+.coverage: &coverage
+  stage: Coverage
+  language: python
+  cache:
+    directories:
+      - $HOME/.cache/pip
+      - $TRAVIS_BUILD_DIR/target
+  install:
+    - ci/travis/coverage/install.sh
+  script:
+    - cargo tarpaulin -v
+  after_success:
+    - curl -SsL "https://codecov.io/bash" | bash
+  before_cache:
+    - cargo cache -a
 
 jobs:
   include:
@@ -76,6 +93,9 @@ jobs:
       <<: *test-python-osx
     - env: PYTHON=python3.8
       <<: *test-python-osx
+    # Coverage
+    - python: 3.8
+      <<: *coverage
 
 deploy:
   provider: script
