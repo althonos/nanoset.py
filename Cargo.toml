@@ -27,7 +27,7 @@ status     = "passively-maintained"
 version = "0.3.1"
 
 [dependencies.pyo3]
-version = "0.9.2"
+version = "0.10.1"
 [dependencies.pyo3-built]
 version = "0.4.0"
 
