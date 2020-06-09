@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.2.0...HEAD
+
+
+## [v0.2.0] - 2020-06-09
+
+[v0.2.0]: https://github.com/althonos/nanoset.py/compare/v0.1.4...v0.2.0
+
+### Added
+- `NanoSet` and `PicoSet` are now `collections.abc.MutableSet` subclasses.
+
+### Changed
+- Bumped `pyo3` to `v0.10.1`.
+
+### Fixed
+- Potential garbage collection crash caused by older `pyo3` versions.
+  ([pyo3#855](https://github.com/PyO3/pyo3/pull/855)).
+
 
 ## [v0.1.4] - 2020-04-08
 
@@ -16,7 +32,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Compilation of Python 3.5 and 3.8 wheels for Mac OSX
   ([#3](https://github.com/althonos/nanoset.py/issues/3)).
-
 
 
 ## [v0.1.3] - 2019-11-18
