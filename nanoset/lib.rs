@@ -93,6 +93,7 @@ macro_rules! common_impl {
 
         #[pymethods]
         impl $cls {
+
             #[new]
             fn __new__(iterable: Option<&PyAny>) -> PyResult<Self> {
                 let gil = Python::acquire_gil();
@@ -131,7 +132,7 @@ macro_rules! common_impl {
                 let py = gil.python();
 
                 // check that we got either `None`, or a set
-                let inner = if state.is_none() {
+                let inner = if state.is_none(py) {
                     None
                 } else if state.cast_as::<PySet>(py)?.is_empty() {
                     None
@@ -146,7 +147,7 @@ macro_rules! common_impl {
             fn __reduce__(&self) -> PyResult<PyObject> {
                 let gil = Python::acquire_gil();
                 let py = gil.python();
-                let ty = <$cls as pyo3::type_object::PyTypeObject>::type_object();
+                let ty = <$cls as pyo3::type_object::PyTypeObject>::type_object(py);
 
                 match self.inner {
                     None => Ok((ty, PyTuple::empty(py)).to_object(py)),
@@ -155,8 +156,7 @@ macro_rules! common_impl {
             }
 
             fn add(slf: &PyCell<Self>, item: &PyAny) -> PyResult<()> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = item.py();
                 let inner = match slf.borrow().inner.as_ref() {
                     None => PySet::empty(py)?.to_object(py),
                     Some(obj) => obj.clone_ref(py),
@@ -227,8 +227,7 @@ macro_rules! common_impl {
             }
 
             fn discard(slf: &PyCell<Self>, elem: &PyAny) -> PyResult<()> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = elem.py();
                 let inner = match slf.borrow().inner {
                     None => return Ok(()),
                     Some(ref obj) => obj.clone_ref(py),
@@ -286,8 +285,7 @@ macro_rules! common_impl {
             }
 
             fn isdisjoint(slf: &PyCell<Self>, other: &PyAny) -> PyResult<PyObject> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = other.py();
 
                 let inner = match slf.borrow().inner.as_ref() {
                     None => PySet::empty(py)?.to_object(py),
@@ -298,8 +296,7 @@ macro_rules! common_impl {
             }
 
             fn issubset(slf: &PyCell<Self>, other: &PyAny) -> PyResult<PyObject> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = other.py();
 
                 let inner = match slf.borrow().inner.as_ref() {
                     None => PySet::empty(py)?.to_object(py),
@@ -310,8 +307,7 @@ macro_rules! common_impl {
             }
 
             fn issuperset(slf: &PyCell<Self>, other: &PyAny) -> PyResult<PyObject> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = other.py();
 
                 let inner = match slf.borrow().inner.as_ref() {
                     None => PySet::empty(py)?.to_object(py),
@@ -344,8 +340,7 @@ macro_rules! common_impl {
             }
 
             fn remove(slf: &PyCell<Self>, item: &PyAny) -> PyResult<()> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = item.py();
 
                 let inner = match slf.borrow().inner {
                     None => return KeyError::into(item.to_object(py)),
@@ -376,8 +371,7 @@ macro_rules! common_impl {
 
             fn symmetric_difference(slf: &PyCell<Self>, other: &PyAny) -> PyResult<Self> {
                 // get the inner set or create a new one
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = other.py();
                 let inner = match slf.borrow().inner.as_ref() {
                     None => PySet::empty(py)?.to_object(py),
                     Some(s) => s.clone_ref(py),
@@ -390,8 +384,7 @@ macro_rules! common_impl {
 
             fn symmetric_difference_update(slf: &PyCell<Self>, other: &PyAny) -> PyResult<()> {
                 // get the inner set object or create a new one
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = other.py();
                 let inner = match slf.borrow_mut().inner.as_ref() {
                     None => PySet::empty(py)?.to_object(py),
                     Some(obj) => obj.clone_ref(py),
@@ -468,8 +461,7 @@ macro_rules! common_impl {
         #[pyproto]
         impl PyNumberProtocol for $cls {
             fn __and__(lhs: &PyCell<Self>, rhs: &PyAny) -> PyResult<PyObject> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = rhs.py();
 
                 if rhs.cast_as::<PySet>().is_err()
                     && rhs.cast_as::<PyFrozenSet>().is_err()
@@ -478,15 +470,14 @@ macro_rules! common_impl {
                     return Ok(py.NotImplemented());
                 }
 
-                let args: Py<PyTuple> = (rhs,).into_py(gil.python());
+                let args: Py<PyTuple> = (rhs,).into_py(py);
                 Self::intersection(lhs, &args.as_ref(py))
                     .and_then(|s| Py::new(py, s))
                     .map(PyObject::from)
             }
 
             fn __sub__(lhs: &PyCell<Self>, rhs: &PyAny) -> PyResult<PyObject> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = rhs.py();
 
                 if rhs.cast_as::<PySet>().is_err()
                     && rhs.cast_as::<PyFrozenSet>().is_err()
@@ -495,15 +486,14 @@ macro_rules! common_impl {
                     return Ok(py.NotImplemented());
                 }
 
-                let args: Py<PyTuple> = (rhs,).into_py(gil.python());
+                let args: Py<PyTuple> = (rhs,).into_py(py);
                 Self::difference(lhs, &args.as_ref(py))
                     .and_then(|s| Py::new(py, s))
                     .map(PyObject::from)
             }
 
             fn __or__(lhs: &PyCell<Self>, rhs: &PyAny) -> PyResult<PyObject> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = rhs.py();
 
                 if rhs.cast_as::<PySet>().is_err()
                     && rhs.cast_as::<PyFrozenSet>().is_err()
@@ -512,15 +502,14 @@ macro_rules! common_impl {
                     return Ok(py.NotImplemented());
                 }
 
-                let args: Py<PyTuple> = (rhs,).into_py(gil.python());
+                let args: Py<PyTuple> = (rhs,).into_py(py);
                 Self::union(lhs, &args.as_ref(py))
                     .and_then(|s| Py::new(py, s))
                     .map(PyObject::from)
             }
 
             fn __xor__(lhs: &PyCell<Self>, rhs: &PyAny) -> PyResult<PyObject> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = rhs.py();
 
                 if rhs.cast_as::<PySet>().is_err()
                     && rhs.cast_as::<PyFrozenSet>().is_err()
@@ -561,9 +550,7 @@ macro_rules! common_impl {
             fn __richcmp__(&self, obj: &PyAny, op: CompareOp) -> PyResult<PyObject> {
                 use self::CompareOp::*;
 
-                let gil = Python::acquire_gil();
-                let py = gil.python();
-
+                let py = obj.py();
                 if let Ok(other) = obj.extract::<PyRef<Self>>() {
                     match (&self.inner, &other.inner) {
                         (None, None) => match op {
@@ -648,8 +635,7 @@ macro_rules! common_impl {
             }
 
             fn __contains__(&self, item: &PyAny) -> PyResult<bool> {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
+                let py = item.py();
                 if let Some(ref obj) = self.inner {
                     // `set1 in set2` actually checks for
                     // `frozenset(set1) in set2`, so we have to check if
@@ -670,6 +656,7 @@ macro_rules! common_impl {
                 }
             }
         }
+
     };
 }
 
@@ -727,23 +714,23 @@ pub fn init(py: Python, m: &PyModule) -> PyResult<()> {
     set.call_method1(
         py,
         "register",
-        (<NanoSet as pyo3::type_object::PyTypeObject>::type_object(),),
+        (<NanoSet as pyo3::type_object::PyTypeObject>::type_object(py),),
     )?;
     set.call_method1(
         py,
         "register",
-        (<PicoSet as pyo3::type_object::PyTypeObject>::type_object(),),
+        (<PicoSet as pyo3::type_object::PyTypeObject>::type_object(py),),
     )?;
     let mutset = cabc.get("MutableSet")?.to_object(py);
     mutset.call_method1(
         py,
         "register",
-        (<NanoSet as pyo3::type_object::PyTypeObject>::type_object(),),
+        (<NanoSet as pyo3::type_object::PyTypeObject>::type_object(py),),
     )?;
     mutset.call_method1(
         py,
         "register",
-        (<PicoSet as pyo3::type_object::PyTypeObject>::type_object(),),
+        (<PicoSet as pyo3::type_object::PyTypeObject>::type_object(py),),
     )?;
 
     Ok(())
