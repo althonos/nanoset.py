@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/althonos/nanoset.py/compare/v0.2.1...HEAD
+
+
+## [v0.2.1] - 2020-07-01
+
+[v0.2.1]: https://github.com/althonos/nanoset.py/compare/v0.2.0...v0.2.1
+
+### Fixed
+- Bumped `pyo3` to `v0.11.0`, which should fix thread-safety issues.
 
 
 ## [v0.2.0] - 2020-06-09
