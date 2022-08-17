@@ -69,7 +69,7 @@ sad when you are used to [Rust](https://www.rust-lang.org/), where most
 32
 ```
 
-*Actually, that's a lie, but keep reading*.
+*Actually, that's a lie, but keep reading* [Python](https://www.scaler.com/topics/python).
 
 ### 💡 Simple example usecase
 
